@@ -1,3 +1,5 @@
+import { CreateClientFormDto } from '../dto/create-client-form.dto';
+
 export interface ClientFormData {
   id: string;
   namaLengkap: string;
@@ -10,7 +12,7 @@ export interface ClientFormData {
 }
 
 export interface IClientFormService {
-  create(createClientFormDto: any): Promise<ClientFormData>;
+  create(createClientFormDto: CreateClientFormDto): Promise<ClientFormData>;
   findAll(): Promise<ClientFormData[]>;
   findOne(id: string): Promise<ClientFormData | null>;
 }
