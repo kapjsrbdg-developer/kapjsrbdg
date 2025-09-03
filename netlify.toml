@@ -1,6 +1,7 @@
 [build]
   command = "npx prisma generate && npm run build"
   publish = ".next"
+  functions = ".netlify/functions"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -9,8 +10,14 @@
   NODE_VERSION = "20"
   NPM_FLAGS = "--production=false"
 
-# Redirect untuk API routes
+# Next.js API Routes handling
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/__next_api_handler"
+  to = "/.netlify/functions/___next_api_handler_*"
+  status = 200
+
+# Fallback untuk semua routes lainnya
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200

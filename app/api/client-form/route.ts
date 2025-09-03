@@ -15,7 +15,11 @@ type ClientFormFromDB = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Log untuk debugging di production
+    console.log('POST /api/client-form - Request received');
+    
     const body = await request.json();
+    console.log('Request body parsed successfully');
     
     const {
       personalData,
@@ -26,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Validasi data
     if (!personalData?.namaLengkap || !personalData?.nomorHP || !personalData?.email) {
+      console.log('Validation failed: Personal data incomplete');
       return NextResponse.json(
         { error: 'Data diri tidak lengkap' },
         { status: 400 }
@@ -33,12 +38,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (!jumlahEntitas || !jasaYangDibutuhkan || !companies) {
+      console.log('Validation failed: Business requirements incomplete');
       return NextResponse.json(
         { error: 'Data kebutuhan tidak lengkap' },
         { status: 400 }
       );
     }
 
+    console.log('Attempting to save to database...');
+    
     // Simpan ke database
     const clientForm = await prisma.clientForm.create({
       data: {
@@ -51,6 +59,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log('Data saved successfully:', clientForm.id);
+
     return NextResponse.json({
       success: true,
       message: 'Form berhasil disimpan!',
@@ -59,8 +69,19 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error saving form:', error);
+    
+    // Detailed error logging
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat menyimpan data' },
+      { 
+        error: 'Terjadi kesalahan saat menyimpan data',
+        details: process.env.NODE_ENV === 'development' ? error : 'Internal server error'
+      },
       { status: 500 }
     );
   }
