@@ -3,6 +3,7 @@
     "slug": "JSR-001",
     "name": "Sony Devano",
     "title": "Managing Partner",
+    "foto": "/img/karyawan/sony.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -48,6 +49,7 @@
     "slug": "JSR-002",
     "name": "Nurmala Arifin",
     "title": "General Manager",
+    "foto": "/img/karyawan/nurmala.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -103,6 +105,7 @@
     "slug": "JSR-003", 
     "name": "Ersa Tri Wahyuni",
     "title": "Staf Ahli",
+    "foto": "/img/karyawan/ersa.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -163,6 +166,7 @@
     "slug": "JSR-004",
     "name": "Ahmad Zakie Mubarrok",
     "title": "Staf Ahli",
+    "foto": "/img/karyawan/zakie.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -199,6 +203,7 @@
     "slug": "JSR-005",
     "name": "Fury Khristiyanti Fitriyah",
     "title": "Staf Ahli", 
+    "foto": "/img/karyawan/fury.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -244,6 +249,7 @@
     "slug": "JSR-006",
     "name": "Diana Putri",
     "title": "Staf Ahli",
+    "foto": "/img/karyawan/diana.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -284,6 +290,7 @@
     "slug": "JSR-007",
     "name": "Almer Reyhan Islam",
     "title": "Manager",
+    "foto": "/img/karyawan/almer.png",
     "education": [
       {
         "degree": "S.Ak. (Sarjana Akuntansi)",
@@ -309,6 +316,7 @@
     "slug": "JSR-008",
     "name": "Mesayu Dita Desianti",
     "title": "Manager",
+    "foto": "/img/karyawan/mesayu.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -329,6 +337,7 @@
     "slug": "JSR-009",
     "name": "Ryma Nerrisa P.A.",
     "title": "Assistant Manager",
+    "foto": "/img/karyawan/ryma.png",
     "education": [
       {
         "degree": "S.Ak. (Sarjana Akuntansi)",
@@ -354,6 +363,7 @@
     "slug": "JSR-010",
     "name": "Faisal Ichsan Suherman",
     "title": "Assistant Manager",
+    "foto": "/img/karyawan/faisal.png",
     "education": [
       {
         "degree": "A.Md. (Ahli Madya)",
@@ -369,6 +379,7 @@
     "slug": "JSR-011",
     "name": "Rivanessa Paradise",
     "title": "Assistant Manager",
+    "foto": "/img/karyawan/rivanessa.png",
     "education": [
       {
         "degree": "S.Ak. (Sarjana Akuntansi)",
@@ -389,6 +400,7 @@
     "slug": "JSR-012",
     "name": "Nisa Risnawati",
     "title": "Konsultan",
+    "foto": "/img/karyawan/nisa.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -409,6 +421,7 @@
     "slug": "JSR-013",
     "name": "Fiany Pradita Shanda",
     "title": "Konsultan",
+    "foto": "/img/karyawan/fiany.png",
     "education": [
       {
         "degree": "S.Ak. (Sarjana Akuntansi)",
@@ -429,6 +442,7 @@
     "slug": "JSR-014",
     "name": "Feby Nuraeni",
     "title": "Konsultan",
+    "foto": "/img/karyawan/feby.png",
     "education": [
       {
         "degree": "S.Ak. (Sarjana Akuntansi)",
@@ -449,6 +463,7 @@
     "slug": "JSR-015",
     "name": "Muhammad Gian Akbar",
     "title": "Konsultan",
+    "foto": "/img/karyawan/gian.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -469,6 +484,7 @@
     "slug": "JSR-016",
     "name": "Alia Rahmaniar",
     "title": "Konsultan",
+    "foto": "/img/karyawan/alia.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
@@ -489,6 +505,7 @@
     "slug": "JSR-017",
     "name": "Fila Al Farisi",
     "title": "Konsultan",
+    "foto": "/img/karyawan/fila.png",
     "education": [
       {
         "degree": "S.Tr.A.K.P. (Sarjana Terapan Akuntan Publik)",
@@ -498,7 +515,7 @@
     ],
     "certification": [
       {
-        "name": "ACPA (Associate Chartered Public Accountant)",
+        "name": "",
         "issuer": "",
         "year": ""
       }
@@ -509,6 +526,7 @@
     "slug": "JSR-018",
     "name": "Meytha Aulia",
     "title": "Konsultan",
+    "foto": "/img/karyawan/meytha.png",
     "education": [
       {
         "degree": "S.Ak. (Sarjana Akuntansi)",
@@ -529,6 +547,7 @@
     "slug": "JSR-019",
     "name": "Anisyah Putri Nadeak",
     "title": "Konsultan",
+    "foto": "/img/karyawan/anisyah.png",
     "education": [
       {
         "degree": "S.Tr.Ak. (Sarjana Terapan Akuntansi)",
@@ -545,6 +564,7 @@
     "slug": "JSR-020",
     "name": "Alicia",
     "title": "Konsultan",
+    "foto": "/img/karyawan/alicia.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",

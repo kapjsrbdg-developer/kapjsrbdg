@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import ProfileImage from '../../../components/ProfileImage';
 import karyawanData from '../../../data/karyawan.json';
 
 interface Education {
@@ -18,6 +19,7 @@ interface Karyawan {
   slug: string;
   name: string;
   title: string;
+  foto: string;
   education: Education[];
   certification: Certification[];
   instagram: string;
@@ -48,9 +50,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         {/* Header Profile */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8 animate-fade-in">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-            {/* Avatar Placeholder */}
-            <div className="w-32 h-32 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-              {karyawan.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+            {/* Profile Photo */}
+            <div className="w-48 h-48 relative rounded-full overflow-hidden shadow-xl border-4 border-white dark:border-gray-700">
+              <ProfileImage
+                src={karyawan.foto || '/img/karyawan/placeholder.svg'}
+                alt={`Foto ${karyawan.name}`}
+                width={192}
+                height={192}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             
             {/* Profile Info */}

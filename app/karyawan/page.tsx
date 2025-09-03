@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import ProfileImage from '../../components/ProfileImage';
 import karyawanData from '../../data/karyawan.json';
 
 interface Education {
@@ -17,6 +19,7 @@ interface Karyawan {
   slug: string;
   name: string;
   title: string;
+  foto: string;
   education: Education[];
   certification?: Certification[];
   instagram: string;
@@ -49,9 +52,15 @@ export default function KaryawanPage() {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl p-6 h-full border-2 border-transparent hover:border-blue-500 transition-all duration-300">
-                  {/* Avatar */}
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    {karyawan.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  {/* Employee Photo */}
+                  <div className="w-20 h-20 relative rounded-full overflow-hidden mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg border-2 border-blue-200 dark:border-blue-600">
+                    <ProfileImage
+                      src={karyawan.foto || '/img/karyawan/placeholder.svg'}
+                      alt={`Foto ${karyawan.name}`}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   
                   {/* Info */}
