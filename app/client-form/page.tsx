@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface PersonalData {
   namaLengkap: string;
@@ -450,12 +451,12 @@ export default function ClientFormPage() {
 
         {/* Back to Home */}
         <div className="text-center mt-8">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-900 transition-colors"
           >
             ← Kembali ke Beranda
-          </a>
+          </Link>
         </div>
       </div>
     </div>
