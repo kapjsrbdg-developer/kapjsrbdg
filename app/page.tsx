@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -19,6 +20,22 @@ export default function Home() {
               maxHeight: 'none' 
             }}
           />
+        </div>
+
+        {/* Navigation Menu */}
+        <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+          <Link
+            href="/client-form"
+            className="bg-blue-900 text-white px-6 py-3 rounded-2xl hover:bg-blue-800 transition-all duration-300 shadow-2xl hover:shadow-3xl font-semibold border-2 border-blue-900/20 backdrop-blur-sm hover:scale-105"
+          >
+            📝 Form Konsultasi
+          </Link>
+          <Link
+            href="/karyawan"
+            className="bg-green-600 text-white px-6 py-3 rounded-2xl hover:bg-green-700 transition-all duration-300 shadow-2xl hover:shadow-3xl font-semibold border-2 border-green-600/20 backdrop-blur-sm hover:scale-105"
+          >
+            👥 Tim Karyawan
+          </Link>
         </div>
 
         {/* <div className="flex gap-4 items-center flex-col sm:flex-row animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
