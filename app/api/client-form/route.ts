@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 
+type ClientFormFromDB = {
+  id: string;
+  namaLengkap: string;
+  nomorHP: string;
+  email: string;
+  jumlahEntitas: number;
+  jasaYangDibutuhkan: string;
+  companies: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -64,7 +76,7 @@ export async function GET() {
     });
 
     // Parse JSON fields untuk response
-    const formsWithParsedData = forms.map((form: any) => ({
+    const formsWithParsedData = forms.map((form: ClientFormFromDB) => ({
       ...form,
       jasaYangDibutuhkan: JSON.parse(form.jasaYangDibutuhkan),
       companies: JSON.parse(form.companies)

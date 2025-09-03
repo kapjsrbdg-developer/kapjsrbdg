@@ -4,6 +4,18 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+interface CompanyData {
+  namaEntitas: string;
+  bidangUsaha: string;
+  alamatPerusahaan: string;
+  tahunBuku: string;
+  pernahDiaudit: boolean;
+  namaKAPSebelumnya?: string;
+  opiniKAPSebelumnya?: string;
+  jumlahPendapatan: string;
+  jumlahAset: string;
+}
+
 interface ClientFormData {
   id: string;
   namaLengkap: string;
@@ -11,7 +23,7 @@ interface ClientFormData {
   email: string;
   jumlahEntitas: number;
   jasaYangDibutuhkan: string[];
-  companies: any[];
+  companies: CompanyData[];
   createdAt: string;
 }
 
