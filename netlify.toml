@@ -1,7 +1,6 @@
 [build]
-  command = "npm run build:netlify"
+  command = "next build"
   publish = ".next"
-  functions = "dist"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -9,24 +8,8 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--production=false"
-  DB_HOST = "localhost"
-  DB_PORT = "3306"
-  DB_USERNAME = "root"
-  DB_PASSWORD = ""
-  DB_DATABASE = "jsr_database"
 
-# API Routes redirect to NestJS functions
-[[redirects]]
-  from = "/client-form"
-  to = "/.netlify/functions/client-form"
-  status = 200
-
-[[redirects]]
-  from = "/admin/*"
-  to = "/.netlify/functions/admin"
-  status = 200
-
-# Fallback untuk semua routes lainnya
+# Simple fallback for Next.js routing
 [[redirects]]
   from = "/*"
   to = "/index.html"

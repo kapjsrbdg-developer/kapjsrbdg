@@ -38,7 +38,8 @@ export default function AdminPage() {
 
   const fetchForms = async () => {
     try {
-      const response = await fetch('http://localhost:3001/admin/submissions');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/admin/submissions`);
       const data = await response.json();
       setForms(data);
     } catch (error) {

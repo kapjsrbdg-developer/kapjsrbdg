@@ -141,7 +141,8 @@ export default function ClientFormPage() {
     setSubmitMessage('');
 
     try {
-      const response = await fetch('http://localhost:3001/client-form', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/client-form`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

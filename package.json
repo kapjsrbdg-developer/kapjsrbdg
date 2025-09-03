@@ -4,15 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "nest build && next build",
-    "start": "nest start --watch",
-    "start:prod": "node dist/main",
-    "next:start": "next start",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint",
     "nest:build": "nest build",
-    "nest:start": "nest start",
-    "nest:start:prod": "node dist/main",
-    "build:netlify": "nest build && next build"
+    "nest:start": "nest start --watch",
+    "nest:start:prod": "node dist/src/main.js",
+    "nest:dev": "node dist/src/main-dev.js",
+    "build:full": "nest build && next build"
   },
   "dependencies": {
     "@nestjs/cli": "^11.0.10",
