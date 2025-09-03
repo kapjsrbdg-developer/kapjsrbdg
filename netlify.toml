@@ -1,5 +1,5 @@
 [build]
-  command = "npx prisma generate && npm run build"
+  command = "chmod +x build.sh && ./build.sh"
   publish = ".next"
   functions = ".netlify/functions"
 
@@ -9,6 +9,7 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--production=false"
+  DATABASE_URL = "file:./production.db"
 
 # Next.js API Routes handling
 [[redirects]]

@@ -3,6 +3,10 @@
 # Build script untuk Netlify dengan Prisma setup
 echo "🚀 Starting Netlify build with Prisma..."
 
+# Set DATABASE_URL environment variable
+export DATABASE_URL="file:./production.db"
+echo "📌 DATABASE_URL set to: $DATABASE_URL"
+
 # Ensure database directory exists
 mkdir -p prisma
 

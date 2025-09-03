@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "build": "next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "build:netlify": "DATABASE_URL=file:./production.db prisma generate && DATABASE_URL=file:./production.db prisma db push --accept-data-loss && next build"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
