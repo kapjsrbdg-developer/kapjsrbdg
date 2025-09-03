@@ -1,12 +1,24 @@
 import Link from 'next/link';
 import karyawanData from '../../data/karyawan.json';
 
+interface Education {
+  degree: string;
+  institution: string;
+  year: string;
+}
+
+interface Certification {
+  name: string;
+  issuer: string;
+  year: string;
+}
+
 interface Karyawan {
   slug: string;
   name: string;
   title: string;
-  education: any[];
-  certification: any[];
+  education: Education[];
+  certification?: Certification[];
   instagram: string;
 }
 
@@ -26,7 +38,7 @@ export default function KaryawanPage() {
 
         {/* Employee Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {karyawanData.map((karyawan: any, index: number) => {
+          {karyawanData.map((karyawan: Karyawan, index: number) => {
             const education = Array.isArray(karyawan.education) ? karyawan.education : [];
             const certification = Array.isArray(karyawan.certification) ? karyawan.certification : [];
             return (
