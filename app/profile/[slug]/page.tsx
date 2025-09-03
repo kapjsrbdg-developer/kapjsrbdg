@@ -33,9 +33,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const { slug } = await params;
   
   // Cari karyawan berdasarkan slug
-  const karyawan: Karyawan | undefined = karyawanData.find(
-    (employee: Karyawan) => employee.slug === slug
-  );
+  const karyawan = karyawanData.find(
+    (employee) => employee.slug === slug
+  ) as Karyawan | undefined;
 
   // Jika karyawan tidak ditemukan, tampilkan 404
   if (!karyawan) {

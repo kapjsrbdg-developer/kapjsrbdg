@@ -26,61 +26,65 @@ export default function KaryawanPage() {
 
         {/* Employee Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {karyawanData.map((karyawan: Karyawan, index: number) => (
-            <Link
-              key={karyawan.slug}
-              href={`/profile/${karyawan.slug}`}
-              className="group block animate-fade-in hover:scale-105 transition-all duration-300"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl p-6 h-full border-2 border-transparent hover:border-blue-500 transition-all duration-300">
-                {/* Avatar */}
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                  {karyawan.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </div>
-                
-                {/* Info */}
-                <div className="text-center">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {karyawan.name}
-                  </h2>
-                  <p className="text-blue-600 dark:text-blue-400 font-semibold mb-3">
-                    {karyawan.title}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    ID: <span className="font-mono font-semibold">{karyawan.slug}</span>
-                  </p>
+          {karyawanData.map((karyawan: any, index: number) => {
+            const education = Array.isArray(karyawan.education) ? karyawan.education : [];
+            const certification = Array.isArray(karyawan.certification) ? karyawan.certification : [];
+            return (
+              <Link
+                key={karyawan.slug}
+                href={`/profile/${karyawan.slug}`}
+                className="group block animate-fade-in hover:scale-105 transition-all duration-300"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl p-6 h-full border-2 border-transparent hover:border-blue-500 transition-all duration-300">
+                  {/* Avatar */}
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    {karyawan.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                  </div>
                   
-                  {/* Stats */}
-                  <div className="flex justify-center gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="font-bold text-gray-900 dark:text-white">
-                        {karyawan.education.length}
+                  {/* Info */}
+                  <div className="text-center">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {karyawan.name}
+                    </h2>
+                    <p className="text-blue-600 dark:text-blue-400 font-semibold mb-3">
+                      {karyawan.title}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      ID: <span className="font-mono font-semibold">{karyawan.slug}</span>
+                    </p>
+                    
+                    {/* Stats */}
+                    <div className="flex justify-center gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 dark:text-white">
+                          {education.length}
+                        </div>
+                        <div className="text-gray-600 dark:text-gray-400">
+                          Pendidikan
+                        </div>
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        Pendidikan
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-bold text-gray-900 dark:text-white">
-                        {karyawan.certification.length}
-                      </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        Sertifikat
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 dark:text-white">
+                          {certification.length}
+                        </div>
+                        <div className="text-gray-600 dark:text-gray-400">
+                          Sertifikat
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                {/* Hover indicator */}
-                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="text-center text-blue-600 dark:text-blue-400 text-sm font-medium">
-                    Klik untuk melihat profil lengkap →
+                  
+                  {/* Hover indicator */}
+                  <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="text-center text-blue-600 dark:text-blue-400 text-sm font-medium">
+                      Klik untuk melihat profil lengkap →
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Back to Home */}
