@@ -4,20 +4,31 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "postinstall": "prisma generate",
-    "start": "next start",
+    "build": "nest build && next build",
+    "start": "nest start --watch",
+    "start:prod": "node dist/main",
+    "next:start": "next start",
     "lint": "eslint",
-    "db:push": "prisma db push",
-    "db:generate": "prisma generate",
-    "build:netlify": "DATABASE_URL=file:./production.db prisma generate && DATABASE_URL=file:./production.db prisma db push --accept-data-loss && next build"
+    "nest:build": "nest build",
+    "nest:start": "nest start",
+    "nest:start:prod": "node dist/main",
+    "build:netlify": "nest build && next build"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "mysql2": "^3.14.4",
     "next": "15.5.2",
-    "prisma": "^6.15.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "typeorm": "^0.3.26"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

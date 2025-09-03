@@ -141,7 +141,7 @@ export default function ClientFormPage() {
     setSubmitMessage('');
 
     try {
-      const response = await fetch('/api/client-form', {
+      const response = await fetch('http://localhost:3001/client-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

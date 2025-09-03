@@ -1,70 +1,45 @@
+"use strict";
 'use client';
-
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-
-interface CompanyData {
-  namaEntitas: string;
-  bidangUsaha: string;
-  alamatPerusahaan: string;
-  tahunBuku: string;
-  pernahDiaudit: boolean;
-  namaKAPSebelumnya?: string;
-  opiniKAPSebelumnya?: string;
-  jumlahPendapatan: string;
-  jumlahAset: string;
-}
-
-interface ClientFormData {
-  id: string;
-  namaLengkap: string;
-  nomorHP: string;
-  email: string;
-  jumlahEntitas: number;
-  jasaYangDibutuhkan: string[];
-  companies: CompanyData[];
-  createdAt: string;
-}
-
-export default function AdminPage() {
-  const [forms, setForms] = useState<ClientFormData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedForm, setSelectedForm] = useState<ClientFormData | null>(null);
-
-  useEffect(() => {
-    fetchForms();
-  }, []);
-
-  const fetchForms = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/admin/submissions');
-      const data = await response.json();
-      setForms(data);
-    } catch (error) {
-      console.error('Error fetching forms:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('id-ID');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 flex items-center justify-center">
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = AdminPage;
+const react_1 = require("react");
+const image_1 = __importDefault(require("next/image"));
+const link_1 = __importDefault(require("next/link"));
+function AdminPage() {
+    const [forms, setForms] = (0, react_1.useState)([]);
+    const [loading, setLoading] = (0, react_1.useState)(true);
+    const [selectedForm, setSelectedForm] = (0, react_1.useState)(null);
+    (0, react_1.useEffect)(() => {
+        fetchForms();
+    }, []);
+    const fetchForms = async () => {
+        try {
+            const response = await fetch('http://localhost:3001/admin/submissions');
+            const data = await response.json();
+            setForms(data);
+        }
+        catch (error) {
+            console.error('Error fetching forms:', error);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleString('id-ID');
+    };
+    if (loading) {
+        return (<div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
           <p className="text-slate-600">Memuat data...</p>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 relative overflow-hidden">
+      </div>);
+    }
+    return (<div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-900 to-blue-800 rounded-full blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
@@ -76,14 +51,7 @@ export default function AdminPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center p-4 bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl border-2 border-white/50 hover:scale-105 transition-all duration-300 mb-6">
-            <Image
-              src="/logo.svg"
-              alt="JSR Logo"
-              width={120}
-              height={60}
-              className="h-12 w-auto"
-              priority
-            />
+            <image_1.default src="/logo.svg" alt="JSR Logo" width={120} height={60} className="h-12 w-auto" priority/>
           </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Admin Dashboard</h1>
           <p className="text-slate-600">Data Form Konsultasi Klien</p>
@@ -115,12 +83,9 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold text-blue-900">Daftar Form Konsultasi</h2>
           </div>
           
-          {forms.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">
+          {forms.length === 0 ? (<div className="p-8 text-center text-slate-500">
               Belum ada form yang disubmit
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+            </div>) : (<div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
@@ -145,8 +110,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {forms.map((form) => (
-                    <tr key={form.id} className="hover:bg-slate-50">
+                  {forms.map((form) => (<tr key={form.id} className="hover:bg-slate-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{form.namaLengkap}</div>
                         <div className="text-sm text-gray-500">{form.email}</div>
@@ -161,52 +125,33 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {form.jasaYangDibutuhkan.slice(0, 2).map((jasa, index) => (
-                            <div key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block mr-1 mb-1">
+                          {form.jasaYangDibutuhkan.slice(0, 2).map((jasa, index) => (<div key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block mr-1 mb-1">
                               {jasa}
-                            </div>
-                          ))}
-                          {form.jasaYangDibutuhkan.length > 2 && (
-                            <div className="text-xs text-slate-500">+{form.jasaYangDibutuhkan.length - 2} lainnya</div>
-                          )}
+                            </div>))}
+                          {form.jasaYangDibutuhkan.length > 2 && (<div className="text-xs text-slate-500">+{form.jasaYangDibutuhkan.length - 2} lainnya</div>)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(form.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => setSelectedForm(form)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
+                        <button onClick={() => setSelectedForm(form)} className="text-blue-600 hover:text-blue-900 mr-3">
                           Detail
                         </button>
                       </td>
-                    </tr>
-                  ))}
+                    </tr>))}
                 </tbody>
               </table>
-            </div>
-          )}
+            </div>)}
         </div>
 
         {/* Modal Detail */}
-        {selectedForm && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-            onClick={() => setSelectedForm(null)}
-          >
-            <div 
-              className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
+        {selectedForm && (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedForm(null)}>
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-6 border-b border-slate-200">
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold text-blue-900">Detail Form Konsultasi</h3>
-                  <button
-                    onClick={() => setSelectedForm(null)}
-                    className="text-slate-500 hover:text-slate-700"
-                  >
+                  <button onClick={() => setSelectedForm(null)} className="text-slate-500 hover:text-slate-700">
                     ✕
                   </button>
                 </div>
@@ -243,11 +188,9 @@ export default function AdminPage() {
                     <div>
                       <label className="text-sm text-slate-600">Jasa yang Dibutuhkan</label>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedForm.jasaYangDibutuhkan.map((jasa, index) => (
-                          <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        {selectedForm.jasaYangDibutuhkan.map((jasa, index) => (<span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                             {jasa}
-                          </span>
-                        ))}
+                          </span>))}
                       </div>
                     </div>
                   </div>
@@ -257,8 +200,7 @@ export default function AdminPage() {
                 <div>
                   <h4 className="font-semibold text-slate-800 mb-3">Detail Perusahaan</h4>
                   <div className="space-y-4">
-                    {selectedForm.companies.map((company, index) => (
-                      <div key={index} className="border border-slate-200 rounded-lg p-4">
+                    {selectedForm.companies.map((company, index) => (<div key={index} className="border border-slate-200 rounded-lg p-4">
                         <h5 className="font-medium text-green-600 mb-3">Perusahaan {index + 1}</h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
@@ -281,8 +223,7 @@ export default function AdminPage() {
                             <label className="text-slate-600">Pernah Diaudit</label>
                             <div className="font-medium text-slate-900">{company.pernahDiaudit ? 'Ya' : 'Tidak'}</div>
                           </div>
-                          {company.pernahDiaudit && (
-                            <>
+                          {company.pernahDiaudit && (<>
                               <div>
                                 <label className="text-slate-600">KAP Sebelumnya</label>
                                 <div className="font-medium text-slate-900">{company.namaKAPSebelumnya}</div>
@@ -291,8 +232,7 @@ export default function AdminPage() {
                                 <label className="text-slate-600">Opini Sebelumnya</label>
                                 <div className="font-medium text-slate-900">{company.opiniKAPSebelumnya}</div>
                               </div>
-                            </>
-                          )}
+                            </>)}
                           <div>
                             <label className="text-slate-600">Pendapatan</label>
                             <div className="font-medium text-slate-900">Rp {company.jumlahPendapatan ? parseInt(company.jumlahPendapatan).toLocaleString('id-ID') : '-'}</div>
@@ -302,25 +242,19 @@ export default function AdminPage() {
                             <div className="font-medium text-slate-900">Rp {company.jumlahAset ? parseInt(company.jumlahAset).toLocaleString('id-ID') : '-'}</div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      </div>))}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </div>)}
 
         {/* Back to Home */}
         <div className="text-center mt-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-900 transition-colors"
-          >
+          <link_1.default href="/" className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-900 transition-colors">
             ← Kembali ke Beranda
-          </Link>
+          </link_1.default>
         </div>
       </div>
-    </div>
-  );
+    </div>);
 }
