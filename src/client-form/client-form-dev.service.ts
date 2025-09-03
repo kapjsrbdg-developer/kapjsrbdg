@@ -1,23 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateClientFormDto } from './dto/create-client-form.dto';
-
-interface MockClientForm {
-  id: string;
-  namaLengkap: string;
-  nomorHP: string;
-  email: string;
-  jumlahEntitas: number;
-  jasaYangDibutuhkan: string;
-  companies: string;
-  createdAt: Date;
-}
+import { ClientFormData, IClientFormService } from './interfaces/client-form.interface';
 
 @Injectable()
-export class ClientFormDevService {
-  private mockData: MockClientForm[] = [];
+export class ClientFormDevService implements IClientFormService {
+  private mockData: ClientFormData[] = [];
 
-  async create(createClientFormDto: CreateClientFormDto): Promise<MockClientForm> {
-    const clientForm = {
+  async create(createClientFormDto: CreateClientFormDto): Promise<ClientFormData> {
+    const clientForm: ClientFormData = {
       id: Date.now().toString(),
       namaLengkap: createClientFormDto.personalData.namaLengkap,
       nomorHP: createClientFormDto.personalData.nomorHP,
@@ -32,11 +22,11 @@ export class ClientFormDevService {
     return clientForm;
   }
 
-  async findAll(): Promise<MockClientForm[]> {
+  async findAll(): Promise<ClientFormData[]> {
     return this.mockData;
   }
 
-  async findOne(id: string): Promise<MockClientForm | null> {
+  async findOne(id: string): Promise<ClientFormData | null> {
     return this.mockData.find(item => item.id === id) || null;
   }
 }

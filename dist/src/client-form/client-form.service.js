@@ -30,13 +30,45 @@ let ClientFormService = class ClientFormService {
             jasaYangDibutuhkan: JSON.stringify(createClientFormDto.jasaYangDibutuhkan),
             companies: JSON.stringify(createClientFormDto.companies),
         });
-        return this.clientFormRepository.save(clientForm);
+        const saved = await this.clientFormRepository.save(clientForm);
+        return {
+            id: saved.id,
+            namaLengkap: saved.namaLengkap,
+            nomorHP: saved.nomorHP,
+            email: saved.email,
+            jumlahEntitas: saved.jumlahEntitas,
+            jasaYangDibutuhkan: saved.jasaYangDibutuhkan,
+            companies: saved.companies,
+            createdAt: saved.createdAt,
+        };
     }
     async findAll() {
-        return this.clientFormRepository.find();
+        const forms = await this.clientFormRepository.find();
+        return forms.map(form => ({
+            id: form.id,
+            namaLengkap: form.namaLengkap,
+            nomorHP: form.nomorHP,
+            email: form.email,
+            jumlahEntitas: form.jumlahEntitas,
+            jasaYangDibutuhkan: form.jasaYangDibutuhkan,
+            companies: form.companies,
+            createdAt: form.createdAt,
+        }));
     }
     async findOne(id) {
-        return this.clientFormRepository.findOne({ where: { id } });
+        const form = await this.clientFormRepository.findOne({ where: { id } });
+        if (!form)
+            return null;
+        return {
+            id: form.id,
+            namaLengkap: form.namaLengkap,
+            nomorHP: form.nomorHP,
+            email: form.email,
+            jumlahEntitas: form.jumlahEntitas,
+            jasaYangDibutuhkan: form.jasaYangDibutuhkan,
+            companies: form.companies,
+            createdAt: form.createdAt,
+        };
     }
 };
 exports.ClientFormService = ClientFormService;

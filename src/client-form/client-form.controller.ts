@@ -1,9 +1,10 @@
 import { Controller, Post, Body, ValidationPipe, Inject } from '@nestjs/common';
 import { CreateClientFormDto } from './dto/create-client-form.dto';
+import { IClientFormService } from './interfaces/client-form.interface';
 
 @Controller('client-form')
 export class ClientFormController {
-  constructor(@Inject('ClientFormService') private readonly clientFormService: any) {}
+  constructor(@Inject('ClientFormService') private readonly clientFormService: IClientFormService) {}
 
   @Post()
   async create(@Body(new ValidationPipe()) createClientFormDto: CreateClientFormDto) {

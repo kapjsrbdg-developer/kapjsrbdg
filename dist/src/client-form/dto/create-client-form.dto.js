@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateClientFormDto = exports.PersonalDataDto = void 0;
+exports.CreateClientFormDto = exports.CompanyDto = exports.PersonalDataDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class PersonalDataDto {
@@ -30,6 +30,52 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], PersonalDataDto.prototype, "email", void 0);
+class CompanyDto {
+}
+exports.CompanyDto = CompanyDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "namaEntitas", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "bidangUsaha", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "alamatPerusahaan", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "tahunBuku", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "pernahDiaudit", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "namaKAPSebelumnya", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "opiniKAPSebelumnya", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "jumlahPendapatan", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CompanyDto.prototype, "jumlahAset", void 0);
 class CreateClientFormDto {
 }
 exports.CreateClientFormDto = CreateClientFormDto;
@@ -49,5 +95,7 @@ __decorate([
 ], CreateClientFormDto.prototype, "jasaYangDibutuhkan", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => CompanyDto),
     __metadata("design:type", Array)
 ], CreateClientFormDto.prototype, "companies", void 0);

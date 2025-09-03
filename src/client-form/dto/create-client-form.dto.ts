@@ -15,6 +15,42 @@ export class PersonalDataDto {
   email: string;
 }
 
+export class CompanyDto {
+  @IsString()
+  @IsNotEmpty()
+  namaEntitas: string;
+
+  @IsString()
+  @IsNotEmpty()
+  bidangUsaha: string;
+
+  @IsString()
+  @IsNotEmpty()
+  alamatPerusahaan: string;
+
+  @IsString()
+  @IsNotEmpty()
+  tahunBuku: string;
+
+  @IsString()
+  @IsNotEmpty()
+  pernahDiaudit: string; // Change from boolean to string
+
+  @IsString()
+  namaKAPSebelumnya?: string;
+
+  @IsString()
+  opiniKAPSebelumnya?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  jumlahPendapatan: string;
+
+  @IsString()
+  @IsNotEmpty()
+  jumlahAset: string;
+}
+
 export class CreateClientFormDto {
   @IsObject()
   @ValidateNested()
@@ -28,5 +64,7 @@ export class CreateClientFormDto {
   jasaYangDibutuhkan: string[];
 
   @IsArray()
-  companies: any[];
+  @ValidateNested({ each: true })
+  @Type(() => CompanyDto)
+  companies: CompanyDto[];
 }
