@@ -23,7 +23,7 @@ export default function Home() {
         </div>
 
         {/* Navigation Menu */}
-        <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+        {/* <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
           <Link
             href="/client-form"
             className="bg-blue-900 text-white px-6 py-3 rounded-2xl hover:bg-blue-800 transition-all duration-300 shadow-2xl hover:shadow-3xl font-semibold border-2 border-blue-900/20 backdrop-blur-sm hover:scale-105"
@@ -36,7 +36,13 @@ export default function Home() {
           >
             👥 Tim Karyawan
           </Link>
-        </div>
+          <Link
+            href="/admin"
+            className="bg-purple-600 text-white px-6 py-3 rounded-2xl hover:bg-purple-700 transition-all duration-300 shadow-2xl hover:shadow-3xl font-semibold border-2 border-purple-600/20 backdrop-blur-sm hover:scale-105"
+          >
+            🔧 Admin Dashboard
+          </Link>
+        </div> */}
 
         {/* <div className="flex gap-4 items-center flex-col sm:flex-row animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
 

@@ -4,6 +4,23 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+// Helper function to format number with commas
+const formatNumberWithCommas = (value: string): string => {
+  // Remove all non-digit characters except decimal point
+  const numericValue = value.replace(/[^\d]/g, '');
+  
+  // Add commas every three digits
+  if (numericValue.length > 0) {
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  return '';
+};
+
+// Helper function to remove commas from formatted number
+const removeCommas = (value: string): string => {
+  return value.replace(/,/g, '');
+};
+
 interface PersonalData {
   namaLengkap: string;
   nomorHP: string;
@@ -56,6 +73,8 @@ const jasaOptions = [
 
 export default function ClientFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
   const [formData, setFormData] = useState<FormData>({
     personalData: initialPersonalData,
     jumlahEntitas: 1,
@@ -117,10 +136,43 @@ export default function ClientFormPage() {
     }
   };
 
-  const handleSubmit = () => {
-    // For now, just log the data (will connect to database later)
-    console.log('Form Data:', formData);
-    alert('Form berhasil dikirim! (Data akan tersimpan di database nanti)');
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    try {
+      const response = await fetch('/api/client-form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setSubmitMessage('✅ Form berhasil dikirim dan disimpan ke database! Terima kasih atas kepercayaan Anda.');
+        // Reset form
+        setTimeout(() => {
+          setFormData({
+            personalData: initialPersonalData,
+            jumlahEntitas: 1,
+            jasaYangDibutuhkan: [],
+            companies: [initialCompanyData]
+          });
+          setCurrentStep(1);
+          setSubmitMessage('');
+        }, 3000);
+      } else {
+        setSubmitMessage(`❌ Error: ${result.error}`);
+      }
+    } catch (error) {
+      setSubmitMessage('❌ Terjadi kesalahan saat mengirim form. Silakan coba lagi.');
+      console.error('Submit error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -390,26 +442,44 @@ export default function ClientFormPage() {
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           Jumlah Pendapatan/Penjualan Tahun Audit *
                         </label>
-                        <input
-                          type="text"
-                          value={company.jumlahPendapatan}
-                          onChange={(e) => handleCompanyDataChange(index, 'jumlahPendapatan', e.target.value)}
-                          className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
-                          placeholder="Rp 1,000,000,000"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">
+                            Rp
+                          </span>
+                          <input
+                            type="text"
+                            value={formatNumberWithCommas(company.jumlahPendapatan)}
+                            onChange={(e) => {
+                              const formattedValue = formatNumberWithCommas(e.target.value);
+                              const rawValue = removeCommas(formattedValue);
+                              handleCompanyDataChange(index, 'jumlahPendapatan', rawValue);
+                            }}
+                            className="w-full text-slate-900 font-medium pl-10 pr-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                            placeholder="1,000,000,000"
+                          />
+                        </div>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           Jumlah Aset *
                         </label>
-                        <input
-                          type="text"
-                          value={company.jumlahAset}
-                          onChange={(e) => handleCompanyDataChange(index, 'jumlahAset', e.target.value)}
-                          className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
-                          placeholder="Rp 500,000,000"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">
+                            Rp
+                          </span>
+                          <input
+                            type="text"
+                            value={formatNumberWithCommas(company.jumlahAset)}
+                            onChange={(e) => {
+                              const formattedValue = formatNumberWithCommas(e.target.value);
+                              const rawValue = removeCommas(formattedValue);
+                              handleCompanyDataChange(index, 'jumlahAset', rawValue);
+                            }}
+                            className="w-full text-slate-900 font-medium pl-10 pr-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                            placeholder="500,000,000"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -418,12 +488,20 @@ export default function ClientFormPage() {
             </div>
           )}
 
+          {/* Submission Message */}
+          {submitMessage && (
+            <div className={`p-4 rounded-xl ${submitMessage.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {submitMessage}
+            </div>
+          )}
+
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-slate-200">
+          <div className="flex justify-between pt-6 border-t border-slate-200">
             {currentStep > 1 && (
               <button
                 onClick={prevStep}
                 className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl hover:bg-slate-300 transition-colors font-medium"
+                disabled={isSubmitting}
               >
                 ← Sebelumnya
               </button>
@@ -434,15 +512,17 @@ export default function ClientFormPage() {
                 <button
                   onClick={nextStep}
                   className="px-8 py-3 bg-blue-900 text-white rounded-xl hover:bg-blue-800 transition-colors font-medium shadow-lg hover:shadow-xl"
+                  disabled={isSubmitting}
                 >
                   Selanjutnya →
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
-                  className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium shadow-lg hover:shadow-xl"
+                  disabled={isSubmitting}
+                  className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Kirim Form
+                  {isSubmitting ? 'Mengirim...' : '📤 Kirim Form'}
                 </button>
               )}
             </div>
