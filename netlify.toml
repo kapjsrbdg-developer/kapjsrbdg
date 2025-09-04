@@ -1,5 +1,5 @@
 [build]
-  command = "next build"
+  command = "chmod +x netlify-build.sh && ./netlify-build.sh"
   publish = ".next"
 
 [[plugins]]
@@ -8,6 +8,9 @@
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--production=false"
+  # These will be overridden by Netlify environment variables
+  NEXT_PUBLIC_SUPABASE_URL = "https://tyorydcmacaqmdgfclas.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_Kk0Flz-zLGxh1_t2uqFn8w_tDbngWwY"
 
 # Simple fallback for Next.js routing
 [[redirects]]
