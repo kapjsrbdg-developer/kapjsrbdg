@@ -5,29 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getAllClientForms, ClientFormData as SupabaseClientFormData } from '../../lib/supabase';
 
-interface CompanyData {
-  namaEntitas: string;
-  bidangUsaha: string;
-  alamatPerusahaan: string;
-  tahunBuku: string;
-  pernahDiaudit: boolean;
-  namaKAPSebelumnya?: string;
-  opiniKAPSebelumnya?: string;
-  jumlahPendapatan: string;
-  jumlahAset: string;
-}
-
-interface ClientFormData {
-  id: string;
-  namaLengkap: string;
-  nomorHP: string;
-  email: string;
-  jumlahEntitas: number;
-  jasaYangDibutuhkan: string[];
-  companies: CompanyData[];
-  createdAt: string;
-}
-
 export default function AdminPage() {
   const [forms, setForms] = useState<SupabaseClientFormData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +140,6 @@ export default function AdminPage() {
                 <tbody className="bg-white divide-y divide-slate-200">
                   {forms.map((form) => {
                     const jasaArray = JSON.parse(form.jasa_yang_dibutuhkan || '[]');
-                    const companiesArray = JSON.parse(form.companies || '[]');
                     
                     return (
                       <tr key={form.id} className="hover:bg-slate-50">
@@ -284,7 +260,17 @@ export default function AdminPage() {
                       <div>
                         <h4 className="font-semibold text-slate-800 mb-3">Detail Perusahaan</h4>
                         <div className="space-y-4">
-                          {companiesArray.map((company: any, index: number) => (
+                          {companiesArray.map((company: {
+                            namaEntitas: string;
+                            bidangUsaha: string;
+                            alamatPerusahaan: string;
+                            tahunBuku: string;
+                            pernahDiaudit: boolean;
+                            namaKAPSebelumnya?: string;
+                            opiniKAPSebelumnya?: string;
+                            jumlahPendapatan: string;
+                            jumlahAset: string;
+                          }, index: number) => (
                             <div key={index} className="border border-slate-200 rounded-lg p-4">
                               <h5 className="font-medium text-green-600 mb-3">Perusahaan {index + 1}</h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

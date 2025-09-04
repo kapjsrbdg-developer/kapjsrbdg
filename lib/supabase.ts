@@ -18,6 +18,19 @@ export interface ClientFormData {
   updated_at?: string;
 }
 
+// Define company data interface
+interface CompanyFormData {
+  namaEntitas: string;
+  bidangUsaha: string;
+  alamatPerusahaan: string;
+  tahunBuku: string;
+  pernahDiaudit: boolean;
+  namaKAPSebelumnya?: string;
+  opiniKAPSebelumnya?: string;
+  jumlahPendapatan: string;
+  jumlahAset: string;
+}
+
 // Insert client form data with RLS bypass for public access
 export const insertClientForm = async (formData: {
   personalData: {
@@ -27,7 +40,7 @@ export const insertClientForm = async (formData: {
   };
   jumlahEntitas: number;
   jasaYangDibutuhkan: string[];
-  companies: any[];
+  companies: CompanyFormData[];
 }) => {
   try {
     const clientFormData: Omit<ClientFormData, 'id' | 'created_at' | 'updated_at'> = {

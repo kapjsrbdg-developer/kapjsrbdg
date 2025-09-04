@@ -166,7 +166,7 @@ export default function ClientFormPage() {
       }
 
       // Submit to Supabase
-      const { data, error } = await insertClientForm(formData);
+      const { error } = await insertClientForm(formData);
 
       if (error) {
         setSubmitMessage(`❌ Error: ${error}`);
