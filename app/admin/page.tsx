@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getAllClientForms, ClientFormData as SupabaseClientFormData } from '../../lib/supabase';
 
 interface CompanyData {
   namaEntitas: string;
@@ -28,9 +29,10 @@ interface ClientFormData {
 }
 
 export default function AdminPage() {
-  const [forms, setForms] = useState<ClientFormData[]>([]);
+  const [forms, setForms] = useState<SupabaseClientFormData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedForm, setSelectedForm] = useState<ClientFormData | null>(null);
+  const [error, setError] = useState<string>('');
+  const [selectedForm, setSelectedForm] = useState<SupabaseClientFormData | null>(null);
 
   useEffect(() => {
     fetchForms();
@@ -38,12 +40,16 @@ export default function AdminPage() {
 
   const fetchForms = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/admin/submissions`);
-      const data = await response.json();
-      setForms(data);
-    } catch (error) {
-      console.error('Error fetching forms:', error);
+      const { data, error } = await getAllClientForms();
+      
+      if (error) {
+        setError(error);
+      } else {
+        setForms(data || []);
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan saat mengambil data');
+      console.error('Error fetching forms:', err);
     } finally {
       setLoading(false);
     }
@@ -98,13 +104,13 @@ export default function AdminPage() {
           </div>
           <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-slate-200/50">
             <div className="text-3xl font-bold text-green-600">
-              {forms.reduce((sum, form) => sum + form.jumlahEntitas, 0)}
+              {forms.reduce((sum, form) => sum + form.jumlah_entitas, 0)}
             </div>
             <div className="text-slate-600">Total Entitas</div>
           </div>
           <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-slate-200/50">
             <div className="text-3xl font-bold text-purple-600">
-              {forms.filter(form => new Date(form.createdAt).toDateString() === new Date().toDateString()).length}
+              {forms.filter(form => form.created_at && new Date(form.created_at).toDateString() === new Date().toDateString()).length}
             </div>
             <div className="text-slate-600">Hari Ini</div>
           </div>
@@ -116,7 +122,16 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold text-blue-900">Daftar Form Konsultasi</h2>
           </div>
           
-          {forms.length === 0 ? (
+          {/* Error Message */}
+          {error && (
+            <div className="p-6">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                ❌ {error}
+              </div>
+            </div>
+          )}
+          
+          {forms.length === 0 && !error ? (
             <div className="p-8 text-center text-slate-500">
               Belum ada form yang disubmit
             </div>
@@ -146,45 +161,50 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200">
-                  {forms.map((form) => (
-                    <tr key={form.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{form.namaLengkap}</div>
-                        <div className="text-sm text-gray-500">{form.email}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{form.nomorHP}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {form.jumlahEntitas} entitas
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {form.jasaYangDibutuhkan.slice(0, 2).map((jasa, index) => (
-                            <div key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block mr-1 mb-1">
-                              {jasa}
-                            </div>
-                          ))}
-                          {form.jasaYangDibutuhkan.length > 2 && (
-                            <div className="text-xs text-slate-500">+{form.jasaYangDibutuhkan.length - 2} lainnya</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(form.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => setSelectedForm(form)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          Detail
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {forms.map((form) => {
+                    const jasaArray = JSON.parse(form.jasa_yang_dibutuhkan || '[]');
+                    const companiesArray = JSON.parse(form.companies || '[]');
+                    
+                    return (
+                      <tr key={form.id} className="hover:bg-slate-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{form.nama_lengkap}</div>
+                          <div className="text-sm text-gray-500">{form.email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{form.nomor_hp}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            {form.jumlah_entitas} entitas
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {jasaArray.slice(0, 2).map((jasa: string, index: number) => (
+                              <div key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full inline-block mr-1 mb-1">
+                                {jasa}
+                              </div>
+                            ))}
+                            {jasaArray.length > 2 && (
+                              <div className="text-xs text-slate-500">+{jasaArray.length - 2} lainnya</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {form.created_at ? formatDate(form.created_at) : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => setSelectedForm(form)}
+                            className="text-blue-600 hover:text-blue-900 mr-3"
+                          >
+                            Detail
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -214,99 +234,108 @@ export default function AdminPage() {
               </div>
               
               <div className="p-6 space-y-6">
-                {/* Personal Data */}
-                <div>
-                  <h4 className="font-semibold text-slate-800 mb-3">Data Diri</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg">
-                    <div>
-                      <label className="text-sm text-slate-600">Nama Lengkap</label>
-                      <div className="font-medium text-slate-900">{selectedForm.namaLengkap}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm text-slate-600">Nomor HP</label>
-                      <div className="font-medium text-slate-900">{selectedForm.nomorHP}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm text-slate-600">Email</label>
-                      <div className="font-medium text-slate-900">{selectedForm.email}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Business Requirements */}
-                <div>
-                  <h4 className="font-semibold text-slate-800 mb-3">Kebutuhan Bisnis</h4>
-                  <div className="bg-slate-50 p-4 rounded-lg space-y-3">
-                    <div>
-                      <label className="text-sm text-slate-600">Jumlah Entitas</label>
-                      <div className="font-medium text-slate-900">{selectedForm.jumlahEntitas}</div>
-                    </div>
-                    <div>
-                      <label className="text-sm text-slate-600">Jasa yang Dibutuhkan</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedForm.jasaYangDibutuhkan.map((jasa, index) => (
-                          <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                            {jasa}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Companies */}
-                <div>
-                  <h4 className="font-semibold text-slate-800 mb-3">Detail Perusahaan</h4>
-                  <div className="space-y-4">
-                    {selectedForm.companies.map((company, index) => (
-                      <div key={index} className="border border-slate-200 rounded-lg p-4">
-                        <h5 className="font-medium text-green-600 mb-3">Perusahaan {index + 1}</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {(() => {
+                  const jasaArray = JSON.parse(selectedForm.jasa_yang_dibutuhkan || '[]');
+                  const companiesArray = JSON.parse(selectedForm.companies || '[]');
+                  
+                  return (
+                    <>
+                      {/* Personal Data */}
+                      <div>
+                        <h4 className="font-semibold text-slate-800 mb-3">Data Diri</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg">
                           <div>
-                            <label className="text-slate-600">Nama Entitas</label>
-                            <div className="font-medium text-slate-900">{company.namaEntitas}</div>
+                            <label className="text-sm text-slate-600">Nama Lengkap</label>
+                            <div className="font-medium text-slate-900">{selectedForm.nama_lengkap}</div>
                           </div>
                           <div>
-                            <label className="text-slate-600">Bidang Usaha</label>
-                            <div className="font-medium text-slate-900">{company.bidangUsaha}</div>
-                          </div>
-                          <div className="md:col-span-2">
-                            <label className="text-slate-600">Alamat</label>
-                            <div className="font-medium text-slate-900">{company.alamatPerusahaan}</div>
+                            <label className="text-sm text-slate-600">Nomor HP</label>
+                            <div className="font-medium text-slate-900">{selectedForm.nomor_hp}</div>
                           </div>
                           <div>
-                            <label className="text-slate-600">Tahun Buku</label>
-                            <div className="font-medium text-slate-900">{company.tahunBuku}</div>
-                          </div>
-                          <div>
-                            <label className="text-slate-600">Pernah Diaudit</label>
-                            <div className="font-medium text-slate-900">{company.pernahDiaudit ? 'Ya' : 'Tidak'}</div>
-                          </div>
-                          {company.pernahDiaudit && (
-                            <>
-                              <div>
-                                <label className="text-slate-600">KAP Sebelumnya</label>
-                                <div className="font-medium text-slate-900">{company.namaKAPSebelumnya}</div>
-                              </div>
-                              <div>
-                                <label className="text-slate-600">Opini Sebelumnya</label>
-                                <div className="font-medium text-slate-900">{company.opiniKAPSebelumnya}</div>
-                              </div>
-                            </>
-                          )}
-                          <div>
-                            <label className="text-slate-600">Pendapatan</label>
-                            <div className="font-medium text-slate-900">Rp {company.jumlahPendapatan ? parseInt(company.jumlahPendapatan).toLocaleString('id-ID') : '-'}</div>
-                          </div>
-                          <div>
-                            <label className="text-slate-600">Aset</label>
-                            <div className="font-medium text-slate-900">Rp {company.jumlahAset ? parseInt(company.jumlahAset).toLocaleString('id-ID') : '-'}</div>
+                            <label className="text-sm text-slate-600">Email</label>
+                            <div className="font-medium text-slate-900">{selectedForm.email}</div>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+
+                      {/* Business Requirements */}
+                      <div>
+                        <h4 className="font-semibold text-slate-800 mb-3">Kebutuhan Bisnis</h4>
+                        <div className="bg-slate-50 p-4 rounded-lg space-y-3">
+                          <div>
+                            <label className="text-sm text-slate-600">Jumlah Entitas</label>
+                            <div className="font-medium text-slate-900">{selectedForm.jumlah_entitas}</div>
+                          </div>
+                          <div>
+                            <label className="text-sm text-slate-600">Jasa yang Dibutuhkan</label>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {jasaArray.map((jasa: string, index: number) => (
+                                <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                  {jasa}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Companies */}
+                      <div>
+                        <h4 className="font-semibold text-slate-800 mb-3">Detail Perusahaan</h4>
+                        <div className="space-y-4">
+                          {companiesArray.map((company: any, index: number) => (
+                            <div key={index} className="border border-slate-200 rounded-lg p-4">
+                              <h5 className="font-medium text-green-600 mb-3">Perusahaan {index + 1}</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <label className="text-slate-600">Nama Entitas</label>
+                                  <div className="font-medium text-slate-900">{company.namaEntitas}</div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Bidang Usaha</label>
+                                  <div className="font-medium text-slate-900">{company.bidangUsaha}</div>
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="text-slate-600">Alamat</label>
+                                  <div className="font-medium text-slate-900">{company.alamatPerusahaan}</div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Tahun Buku</label>
+                                  <div className="font-medium text-slate-900">{company.tahunBuku}</div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Pernah Diaudit</label>
+                                  <div className="font-medium text-slate-900">{company.pernahDiaudit ? 'Ya' : 'Tidak'}</div>
+                                </div>
+                                {company.pernahDiaudit && (
+                                  <>
+                                    <div>
+                                      <label className="text-slate-600">KAP Sebelumnya</label>
+                                      <div className="font-medium text-slate-900">{company.namaKAPSebelumnya}</div>
+                                    </div>
+                                    <div>
+                                      <label className="text-slate-600">Opini Sebelumnya</label>
+                                      <div className="font-medium text-slate-900">{company.opiniKAPSebelumnya}</div>
+                                    </div>
+                                  </>
+                                )}
+                                <div>
+                                  <label className="text-slate-600">Pendapatan</label>
+                                  <div className="font-medium text-slate-900">Rp {company.jumlahPendapatan ? parseInt(company.jumlahPendapatan).toLocaleString('id-ID') : '-'}</div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Aset</label>
+                                  <div className="font-medium text-slate-900">Rp {company.jumlahAset ? parseInt(company.jumlahAset).toLocaleString('id-ID') : '-'}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>

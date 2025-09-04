@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { insertClientForm } from '../../lib/supabase';
 
 // Helper function to format number with commas
 const formatNumberWithCommas = (value: string): string => {
@@ -141,20 +142,39 @@ export default function ClientFormPage() {
     setSubmitMessage('');
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/client-form`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Validate required fields
+      const { personalData, jasaYangDibutuhkan, companies } = formData;
+      
+      if (!personalData.namaLengkap || !personalData.nomorHP || !personalData.email) {
+        setSubmitMessage('❌ Mohon lengkapi semua data diri yang wajib diisi.');
+        return;
+      }
 
-      const result = await response.json();
+      if (jasaYangDibutuhkan.length === 0) {
+        setSubmitMessage('❌ Mohon pilih minimal satu jasa yang dibutuhkan.');
+        return;
+      }
 
-      if (response.ok) {
-        setSubmitMessage('✅ Form berhasil dikirim dan disimpan ke database! Terima kasih atas kepercayaan Anda.');
-        // Reset form
+      // Validate each company data
+      for (let i = 0; i < companies.length; i++) {
+        const company = companies[i];
+        if (!company.namaEntitas || !company.bidangUsaha || !company.alamatPerusahaan || 
+            !company.tahunBuku || !company.jumlahPendapatan || !company.jumlahAset) {
+          setSubmitMessage(`❌ Mohon lengkapi semua data wajib untuk Perusahaan ${i + 1}.`);
+          return;
+        }
+      }
+
+      // Submit to Supabase
+      const { data, error } = await insertClientForm(formData);
+
+      if (error) {
+        setSubmitMessage(`❌ Error: ${error}`);
+        console.error('Supabase error:', error);
+      } else {
+        setSubmitMessage('✅ Form berhasil dikirim dan disimpan ke database! Terima kasih atas kepercayaan Anda kepada JSR Consulting Group.');
+        
+        // Reset form after successful submission
         setTimeout(() => {
           setFormData({
             personalData: initialPersonalData,
@@ -164,13 +184,11 @@ export default function ClientFormPage() {
           });
           setCurrentStep(1);
           setSubmitMessage('');
-        }, 3000);
-      } else {
-        setSubmitMessage(`❌ Error: ${result.error}`);
+        }, 4000);
       }
     } catch (error) {
-      setSubmitMessage('❌ Terjadi kesalahan saat mengirim form. Silakan coba lagi.');
       console.error('Submit error:', error);
+      setSubmitMessage('❌ Terjadi kesalahan saat mengirim form. Silakan coba lagi atau hubungi admin.');
     } finally {
       setIsSubmitting(false);
     }
