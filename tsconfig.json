@@ -5,18 +5,14 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
-    "strictPropertyInitialization": false,
-    "noEmit": false,
-    "outDir": "./dist",
+    "noEmit": true,
     "esModuleInterop": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "plugins": [
       {
         "name": "next"
