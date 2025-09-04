@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Supabase configuration dengan fallback untuk build time
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -31,7 +32,7 @@ interface CompanyFormData {
   jumlahAset: string;
 }
 
-// Insert client form data with RLS bypass for public access
+// Insert client form data dengan error handling untuk missing config
 export const insertClientForm = async (formData: {
   personalData: {
     namaLengkap: string;
@@ -43,6 +44,14 @@ export const insertClientForm = async (formData: {
   companies: CompanyFormData[];
 }) => {
   try {
+    // Check if Supabase is properly configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return {
+        data: null,
+        error: 'Supabase configuration is missing. Please check your environment variables.'
+      };
+    }
+
     const clientFormData: Omit<ClientFormData, 'id' | 'created_at' | 'updated_at'> = {
       nama_lengkap: formData.personalData.namaLengkap,
       nomor_hp: formData.personalData.nomorHP,
@@ -52,7 +61,6 @@ export const insertClientForm = async (formData: {
       companies: JSON.stringify(formData.companies),
     };
 
-    // Try with anon key first
     const { data, error } = await supabase
       .from('client_forms')
       .insert([clientFormData])
@@ -80,9 +88,17 @@ export const insertClientForm = async (formData: {
   }
 };
 
-// Get all client forms (for admin)
+// Get all client forms dengan error handling
 export const getAllClientForms = async () => {
   try {
+    // Check if Supabase is properly configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return {
+        data: [],
+        error: 'Supabase configuration is missing. Please check your environment variables.'
+      };
+    }
+
     const { data, error } = await supabase
       .from('client_forms')
       .select('*')
