@@ -222,14 +222,11 @@ export default function InfoPage() {
         {/* Social Media or Additional Info */}
         <div className="mt-8 text-center">
           <p className="text-slate-500 text-sm">
-            PT. JSR Consulting Group - Professional Audit & Consulting Services
+            Jojo Sunarjo & Rekan Cabang Bandung - Professional Audit & Consulting Services
           </p>
           <div className="flex justify-center space-x-6 mt-4">
             <div className="text-slate-400 text-xs">
-              📧 Email: info@kapjsr.co.id
-            </div>
-            <div className="text-slate-400 text-xs">
-              📱 WhatsApp: +62-xxx-xxxx-xxxx
+              📧 Email: info@kapjsrbdg.co.id
             </div>
           </div>
         </div>
