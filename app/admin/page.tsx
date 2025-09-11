@@ -3,17 +3,38 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getAllClientForms, ClientFormData as SupabaseClientFormData } from '../../lib/supabase';
+import { getAllClientForms, ClientFormData as SupabaseClientFormData, checkAuth, clearUserSession } from '../../lib/supabase';
+import AdminLogin from '../../components/AdminLogin';
 
 export default function AdminPage() {
   const [forms, setForms] = useState<SupabaseClientFormData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [selectedForm, setSelectedForm] = useState<SupabaseClientFormData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    fetchForms();
+    // Check if user is already logged in
+    const userData = checkAuth();
+    if (userData) {
+      setIsAuthenticated(true);
+      fetchForms();
+    }
+    setCheckingAuth(false);
   }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    fetchForms();
+  };
+
+  const handleLogout = () => {
+    clearUserSession();
+    setIsAuthenticated(false);
+    setForms([]);
+    setSelectedForm(null);
+  };
 
   const fetchForms = async () => {
     try {
@@ -35,6 +56,23 @@ export default function AdminPage() {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('id-ID');
   };
+
+  // Show loading while checking authentication
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto mb-4"></div>
+          <p className="text-slate-600">Memeriksa autentikasi...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
+  }
 
   if (loading) {
     return (
@@ -59,15 +97,24 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-4 bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl border-2 border-white/50 hover:scale-105 transition-all duration-300 mb-6">
-            <Image
-              src="/logo.svg"
-              alt="JSR Logo"
-              width={120}
-              height={60}
-              className="h-12 w-auto"
-              priority
-            />
+          <div className="flex justify-between items-center mb-6">
+            <div></div>
+            <div className="inline-flex items-center justify-center p-4 bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl border-2 border-white/50 hover:scale-105 transition-all duration-300">
+              <Image
+                src="/logo.svg"
+                alt="JSR Logo"
+                width={120}
+                height={60}
+                className="h-12 w-auto"
+                priority
+              />
+            </div>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all duration-200 text-sm font-medium"
+            >
+              Logout
+            </button>
           </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Admin Dashboard</h1>
           <p className="text-slate-600">Data Form Konsultasi Klien</p>

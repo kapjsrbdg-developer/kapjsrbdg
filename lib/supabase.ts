@@ -140,3 +140,72 @@ export const getClientFormById = async (id: string) => {
     };
   }
 };
+
+// Types for authentication
+export interface UserData {
+  id?: string;
+  username: string;
+  password: string;
+  created_at?: string;
+}
+
+// Login user function
+export const loginUser = async (username: string, password: string) => {
+  try {
+    // Check if Supabase is properly configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return {
+        data: null,
+        error: 'Supabase configuration is missing. Please check your environment variables.'
+      };
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .eq('password', password)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { 
+          data: null, 
+          error: 'Username atau password salah' 
+        };
+      }
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error during login:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    };
+  }
+};
+
+// Check if user is logged in (by checking localStorage)
+export const checkAuth = () => {
+  if (typeof window !== 'undefined') {
+    const userData = localStorage.getItem('admin_user');
+    return userData ? JSON.parse(userData) : null;
+  }
+  return null;
+};
+
+// Set user session in localStorage
+export const setUserSession = (userData: UserData) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('admin_user', JSON.stringify(userData));
+  }
+};
+
+// Clear user session
+export const clearUserSession = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('admin_user');
+  }
+};
