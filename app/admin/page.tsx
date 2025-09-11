@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getAllClientForms, ClientFormData as SupabaseClientFormData, checkAuth, clearUserSession } from '../../lib/supabase';
 import AdminLogin from '../../components/AdminLogin';
+import * as XLSX from 'xlsx';
 
 export default function AdminPage() {
   const [forms, setForms] = useState<SupabaseClientFormData[]>([]);
@@ -55,6 +56,86 @@ export default function AdminPage() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('id-ID');
+  };
+
+  const exportToExcel = () => {
+    try {
+      // Define interface for company data
+      interface CompanyData {
+        namaEntitas: string;
+        bidangUsaha: string;
+        alamatPerusahaan: string;
+        tahunBuku: string;
+        pernahDiaudit: boolean;
+        namaKAPSebelumnya?: string;
+        opiniKAPSebelumnya?: string;
+        jumlahPendapatan: string;
+        jumlahAset: string;
+      }
+
+      // Prepare data for Excel export
+      const excelData = forms.map((form, index) => {
+        const jasaArray = JSON.parse(form.jasa_yang_dibutuhkan || '[]') as string[];
+        const companiesArray = JSON.parse(form.companies || '[]') as CompanyData[];
+        
+        // Base data with Record type to allow dynamic keys
+        const baseData: Record<string, string | number> = {
+          'No': index + 1,
+          'Nama Lengkap': form.nama_lengkap,
+          'Email': form.email,
+          'Nomor HP': form.nomor_hp,
+          'Jumlah Entitas': form.jumlah_entitas,
+          'Jasa yang Dibutuhkan': jasaArray.join(', '),
+          'Tanggal Submit': form.created_at ? formatDate(form.created_at) : '-'
+        };
+
+        // Add company details
+        companiesArray.forEach((company: CompanyData, companyIndex: number) => {
+          const prefix = companiesArray.length > 1 ? ` (Perusahaan ${companyIndex + 1})` : '';
+          baseData[`Nama Entitas${prefix}`] = company.namaEntitas || '-';
+          baseData[`Bidang Usaha${prefix}`] = company.bidangUsaha || '-';
+          baseData[`Alamat${prefix}`] = company.alamatPerusahaan || '-';
+          baseData[`Tahun Buku${prefix}`] = company.tahunBuku || '-';
+          baseData[`Pernah Diaudit${prefix}`] = company.pernahDiaudit ? 'Ya' : 'Tidak';
+          if (company.pernahDiaudit) {
+            baseData[`KAP Sebelumnya${prefix}`] = company.namaKAPSebelumnya || '-';
+            baseData[`Opini Sebelumnya${prefix}`] = company.opiniKAPSebelumnya || '-';
+          }
+          baseData[`Pendapatan${prefix}`] = company.jumlahPendapatan ? `Rp ${parseInt(company.jumlahPendapatan).toLocaleString('id-ID')}` : '-';
+          baseData[`Aset${prefix}`] = company.jumlahAset ? `Rp ${parseInt(company.jumlahAset).toLocaleString('id-ID')}` : '-';
+        });
+
+        return baseData;
+      });
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(excelData);
+
+      // Auto-width for columns
+      const colWidths = Object.keys(excelData[0] || {}).map(key => ({
+        wch: Math.max(
+          key.length,
+          Math.max(...excelData.map(row => String(row[key] || '').length))
+        )
+      }));
+      ws['!cols'] = colWidths;
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Data Konsultasi');
+
+      // Generate filename with current date
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-'); // HH-MM-SS format
+      const filename = `Data_Konsultasi_JSR_${dateStr}_${timeStr}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(wb, filename);
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('Terjadi kesalahan saat mengexport data. Silakan coba lagi.');
+    }
   };
 
   // Show loading while checking authentication
@@ -139,6 +220,21 @@ export default function AdminPage() {
             <div className="text-slate-600">Hari Ini</div>
           </div>
         </div>
+
+        {/* Export Button */}
+        {forms.length > 0 && (
+          <div className="flex justify-end mb-6">
+            <button
+              onClick={exportToExcel}
+              className="bg-green-600/90 backdrop-blur-sm text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 flex items-center gap-2 shadow-lg border border-green-500/20"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export ke Excel
+            </button>
+          </div>
+        )}
 
         {/* Forms List */}
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
