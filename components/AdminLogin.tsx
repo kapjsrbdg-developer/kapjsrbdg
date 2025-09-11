@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { loginUser, setUserSession, debugGetAllUsers } from '../lib/supabase';
+import { loginUser, setUserSession } from '../lib/supabase';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -36,11 +36,6 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDebugUsers = async () => {
-    console.log('=== DEBUG: Checking all users in database ===');
-    await debugGetAllUsers();
   };
 
   return (
@@ -129,15 +124,6 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                 ) : (
                   'Masuk'
                 )}
-              </button>
-
-              {/* Debug Button */}
-              <button
-                type="button"
-                onClick={handleDebugUsers}
-                className="w-full bg-gray-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-600 transition-all duration-200 text-sm"
-              >
-                🔍 Debug: Lihat Data Users (Check Console)
               </button>
             </form>
           </div>

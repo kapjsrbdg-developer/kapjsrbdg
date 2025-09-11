@@ -160,32 +160,6 @@ export const loginUser = async (username: string, password: string) => {
       };
     }
 
-    console.log('Attempting login with username:', username);
-    
-    // First, let's check if the user exists (for debugging)
-    const { data: checkUser, error: checkError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('username', username);
-
-    console.log('Check user result:', { checkUser, checkError });
-
-    if (checkError) {
-      console.error('Error checking user:', checkError);
-      return { 
-        data: null, 
-        error: `Database error: ${checkError.message}` 
-      };
-    }
-
-    if (!checkUser || checkUser.length === 0) {
-      return { 
-        data: null, 
-        error: 'Username tidak ditemukan' 
-      };
-    }
-
-    // Now check with password
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -193,20 +167,8 @@ export const loginUser = async (username: string, password: string) => {
       .eq('password', password)
       .single();
 
-    console.log('Login attempt result:', { data, error });
-
     if (error) {
       if (error.code === 'PGRST116') {
-        // Check if username exists but password is wrong
-        if (checkUser.length > 0) {
-          console.log('Username found but password mismatch');
-          console.log('Expected password in DB:', checkUser[0].password);
-          console.log('Provided password:', password);
-          return { 
-            data: null, 
-            error: 'Password salah' 
-          };
-        }
         return { 
           data: null, 
           error: 'Username atau password salah' 
@@ -245,22 +207,5 @@ export const setUserSession = (userData: UserData) => {
 export const clearUserSession = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('admin_user');
-  }
-};
-
-// Debug function to check all users in database
-export const debugGetAllUsers = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*');
-
-    console.log('All users in database:', data);
-    console.log('Error (if any):', error);
-    
-    return { data, error };
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    return { data: null, error };
   }
 };
