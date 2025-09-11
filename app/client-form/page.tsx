@@ -76,6 +76,7 @@ export default function ClientFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [formData, setFormData] = useState<FormData>({
     personalData: initialPersonalData,
     jumlahEntitas: 1,
@@ -84,6 +85,15 @@ export default function ClientFormPage() {
   });
 
   const handlePersonalDataChange = (field: keyof PersonalData, value: string) => {
+    // Clear validation error untuk field yang sedang diubah
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
     setFormData(prev => ({
       ...prev,
       personalData: {
@@ -126,6 +136,52 @@ export default function ClientFormPage() {
   };
 
   const nextStep = () => {
+    // Reset validation errors
+    setValidationErrors({});
+    
+    // Validasi untuk step 1 - pastikan data diri sudah diisi
+    if (currentStep === 1) {
+      const { namaLengkap, nomorHP, email } = formData.personalData;
+      const errors: {[key: string]: string} = {};
+      
+      if (!namaLengkap.trim()) {
+        errors.namaLengkap = 'Nama Lengkap wajib diisi';
+      }
+      
+      if (!nomorHP.trim()) {
+        errors.nomorHP = 'Nomor HP wajib diisi';
+      } else {
+        // Validasi nomor HP (minimal 10 digit)
+        const phoneRegex = /^[0-9]{10,15}$/;
+        const cleanPhone = nomorHP.replace(/\D/g, ''); // Hapus karakter non-digit
+        if (!phoneRegex.test(cleanPhone)) {
+          errors.nomorHP = 'Nomor HP harus berisi 10-15 digit angka';
+        }
+      }
+      
+      if (!email.trim()) {
+        errors.email = 'Email wajib diisi';
+      } else {
+        // Validasi format email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          errors.email = 'Format email tidak valid';
+        }
+      }
+      
+      // Jika ada error, tampilkan dan jangan lanjut
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        // Scroll ke field pertama yang error
+        const firstErrorField = Object.keys(errors)[0];
+        const element = document.querySelector(`input[name="${firstErrorField}"], input[placeholder*="${firstErrorField}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+    }
+    
     if (currentStep < 2) {
       setCurrentStep(currentStep + 1);
     }
@@ -135,6 +191,30 @@ export default function ClientFormPage() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  // Helper untuk mengecek apakah data diri sudah valid
+  const isPersonalDataValid = () => {
+    const { namaLengkap, nomorHP, email } = formData.personalData;
+    
+    if (!namaLengkap.trim() || !nomorHP.trim() || !email.trim()) {
+      return false;
+    }
+    
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+    
+    // Validasi nomor HP
+    const phoneRegex = /^[0-9]{10,15}$/;
+    const cleanPhone = nomorHP.replace(/\D/g, '');
+    if (!phoneRegex.test(cleanPhone)) {
+      return false;
+    }
+    
+    return true;
   };
 
   const handleSubmit = async () => {
@@ -254,12 +334,23 @@ export default function ClientFormPage() {
                   </label>
                   <input
                     type="text"
+                    name="namaLengkap"
                     value={formData.personalData.namaLengkap}
                     onChange={(e) => handlePersonalDataChange('namaLengkap', e.target.value)}
-                    className="w-full text-slate-500 px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20 transition-all duration-200"
+                    className={`w-full text-slate-500 px-4 py-3 rounded-xl border transition-all duration-200 ${
+                      validationErrors.namaLengkap 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 bg-red-50' 
+                        : 'border-slate-300 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20'
+                    }`}
                     placeholder="Masukkan nama lengkap"
                     required
                   />
+                  {validationErrors.namaLengkap && (
+                    <p className="text-red-600 text-sm mt-1 flex items-center">
+                      <span className="mr-1">⚠️</span>
+                      {validationErrors.namaLengkap}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -268,12 +359,23 @@ export default function ClientFormPage() {
                   </label>
                   <input
                     type="tel"
+                    name="nomorHP"
                     value={formData.personalData.nomorHP}
                     onChange={(e) => handlePersonalDataChange('nomorHP', e.target.value)}
-                    className="w-full text-slate-500 px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20 transition-all duration-200"
+                    className={`w-full text-slate-500 px-4 py-3 rounded-xl border transition-all duration-200 ${
+                      validationErrors.nomorHP 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 bg-red-50' 
+                        : 'border-slate-300 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20'
+                    }`}
                     placeholder="08xxxxxxxxxx"
                     required
                   />
+                  {validationErrors.nomorHP && (
+                    <p className="text-red-600 text-sm mt-1 flex items-center">
+                      <span className="mr-1">⚠️</span>
+                      {validationErrors.nomorHP}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -282,12 +384,23 @@ export default function ClientFormPage() {
                   </label>
                   <input
                     type="email"
+                    name="email"
                     value={formData.personalData.email}
                     onChange={(e) => handlePersonalDataChange('email', e.target.value)}
-                    className="w-full text-slate-500 px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20 transition-all duration-200"
+                    className={`w-full text-slate-500 px-4 py-3 rounded-xl border transition-all duration-200 ${
+                      validationErrors.email 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 bg-red-50' 
+                        : 'border-slate-300 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20'
+                    }`}
                     placeholder="nama@email.com"
                     required
                   />
+                  {validationErrors.email && (
+                    <p className="text-red-600 text-sm mt-1 flex items-center">
+                      <span className="mr-1">⚠️</span>
+                      {validationErrors.email}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -528,13 +641,25 @@ export default function ClientFormPage() {
             
             <div className="ml-auto">
               {currentStep < 2 ? (
-                <button
-                  onClick={nextStep}
-                  className="px-8 py-3 bg-blue-900 text-white rounded-xl hover:bg-blue-800 transition-colors font-medium shadow-lg hover:shadow-xl"
-                  disabled={isSubmitting}
-                >
-                  Selanjutnya →
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={nextStep}
+                    disabled={isSubmitting || !isPersonalDataValid()}
+                    className={`px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 ${
+                      isPersonalDataValid()
+                        ? 'bg-blue-900 text-white hover:bg-blue-800'
+                        : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    }`}
+                    title={!isPersonalDataValid() ? 'Mohon lengkapi semua data diri yang wajib diisi' : ''}
+                  >
+                    Selanjutnya →
+                  </button>
+                  {!isPersonalDataValid() && (
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-xs text-slate-500 whitespace-nowrap">
+                      Lengkapi data diri terlebih dahulu
+                    </div>
+                  )}
+                </div>
               ) : (
                 <button
                   onClick={handleSubmit}
