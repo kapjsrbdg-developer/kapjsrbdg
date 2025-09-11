@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { loginUser, setUserSession } from '../lib/supabase';
 
 interface AdminLoginProps {
@@ -130,12 +131,12 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
 
         {/* Back to Home Link */}
         <div className="text-center mt-6">
-          <a
+          <Link
             href="/"
             className="text-slate-600 hover:text-blue-900 transition-colors text-sm"
           >
             ← Kembali ke Beranda
-          </a>
+          </Link>
         </div>
       </div>
     </div>
