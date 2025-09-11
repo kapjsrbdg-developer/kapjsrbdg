@@ -37,7 +37,7 @@ export default function InfoPage() {
               priority
             />
           </div>
-          <h1 className="text-4xl font-bold text-blue-900 mb-2">JSR Consulting Group</h1>
+          <h1 className="text-4xl font-bold text-blue-900 mb-2">Jojo Sunarjo & Rekan Cabang Bandung</h1>
           <p className="text-slate-600 text-lg">Quick Access Links</p>
         </div>
 
