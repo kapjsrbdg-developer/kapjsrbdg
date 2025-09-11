@@ -161,7 +161,7 @@ export const loginUser = async (username: string, password: string) => {
     }
 
     const { data, error } = await supabase
-      .from('users')
+      .from('user')
       .select('*')
       .eq('username', username)
       .eq('password', password)
