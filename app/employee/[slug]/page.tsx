@@ -25,13 +25,13 @@ interface Karyawan {
   instagram: string;
 }
 
-interface ProfilePageProps {
+interface EmployeePageProps {
   params: Promise<{
     slug: string;
   }>;
 }
 
-export default async function ProfilePage({ params }: ProfilePageProps) {
+export default async function EmployeePage({ params }: EmployeePageProps) {
   const { slug } = await params;
   
   // Cari karyawan berdasarkan slug
@@ -195,7 +195,7 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for each employee page
-export async function generateMetadata({ params }: ProfilePageProps) {
+export async function generateMetadata({ params }: EmployeePageProps) {
   const { slug } = await params;
   const karyawan = karyawanData.find((employee) => employee.slug === slug);
 
@@ -207,7 +207,7 @@ export async function generateMetadata({ params }: ProfilePageProps) {
   }
 
   return {
-    title: `${karyawan.name} - ${karyawan.title} | JSR Profile`,
+    title: `${karyawan.name} - ${karyawan.title} | JSR Employee`,
     description: `Profil lengkap ${karyawan.name}, ${karyawan.title} di JSR. Lihat riwayat pendidikan dan sertifikasi profesional.`,
   };
 }

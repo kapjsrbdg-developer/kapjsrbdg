@@ -68,7 +68,7 @@ export default function KaryawanPage() {
             return (
               <Link
                 key={karyawan.slug}
-                href={`/profile/${karyawan.slug}`}
+                href={`/employee/${karyawan.slug}`}
                 className="group block animate-fade-in hover:scale-105 transition-all duration-300"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
