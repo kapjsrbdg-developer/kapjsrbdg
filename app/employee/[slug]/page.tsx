@@ -94,9 +94,9 @@ export default async function EmployeePage({ params }: EmployeePageProps) {
               <p className="text-xl text-green-600 mb-4 font-semibold">
                 {karyawan.title}
               </p>
-              <p className="text-lg text-slate-600 mb-4">
+              {/* <p className="text-lg text-slate-600 mb-4">
                 Kode Karyawan: <span className="font-mono font-bold text-blue-900">{karyawan.slug}</span>
-              </p>
+              </p> */}
               
               {/* Instagram Link */}
               {/* <a

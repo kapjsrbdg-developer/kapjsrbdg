@@ -2,7 +2,7 @@
   {
     "slug": "JSR-001",
     "name": "Sony Devano",
-    "title": "Managing Partner",
+    "title": "Lead Partner",
     "foto": "/img/karyawan/sony.png",
     "education": [
       {
@@ -10,7 +10,7 @@
         "institution": "Universitas Padjadjaran",
         "year": ""
       },
-            {
+      {
         "degree": "S.H. (Sarjana Hukum)",
         "institution": "Universitas Kristen Maranatha",
         "year": ""
@@ -28,6 +28,11 @@
     ],
     "certification": [
       {
+        "name": "Ak. (Akuntan)",
+        "issuer": "Universitas Kristen Maranatha",
+        "year": ""
+      },
+      {
         "name": "BKP (Bersertifikat Konsultan Pajak)",
         "issuer": "",
         "year": ""
@@ -38,7 +43,12 @@
         "year": ""
       },
       {
-        "name": "CACP (Certified Accounting Consultant Professional)",
+        "name": "CACP (Certification in Audit Committee Practices)",
+        "issuer": "",
+        "year": ""
+      },
+      {
+        "name": "CA (Chartered Accountant)",
         "issuer": "",
         "year": ""
       }
@@ -69,6 +79,11 @@
     ],
     "certification": [
       {
+        "name": "Ak. (Akuntan)",
+        "issuer": "",
+        "year": ""
+      },
+      {
         "name": "CA (Chartered Accountant)",
         "issuer": "",
         "year": ""
@@ -79,7 +94,7 @@
         "year": ""
       },
       {
-        "name": "CACP (Certified in Audit Committee Practices",
+        "name": "CACP (Certification in Audit Committee Practices)",
         "issuer": "",
         "year": ""
       },
@@ -150,7 +165,7 @@
         "year": ""
       },
       {
-        "name": "CACP (Certified in Audit Committee Practices)",
+        "name": "CACP (Certification in Audit Committee Practices)",
         "issuer": "",
         "year": ""
       },
@@ -187,7 +202,7 @@
         "year": ""
       },
       {
-        "name": "CACP (Certified in Audit Committee Practices)",
+        "name": "CACP (Certification in Audit Committee Practices)",
         "issuer": "",
         "year": ""
       },
@@ -233,7 +248,7 @@
         "year": ""
       },
       {
-        "name": "CACP (Certified in Audit Committee Practices)",
+        "name": "CACP (Certification in Audit Committee Practices)",
         "issuer": "",
         "year": ""
       },
@@ -247,7 +262,7 @@
   },
   {
     "slug": "JSR-006",
-    "name": "Diana Putri",
+    "name": ".",
     "title": "Staf Ahli",
     "foto": "/img/karyawan/diana.png",
     "education": [
@@ -274,7 +289,7 @@
         "year": ""
       },
       {
-        "name": "CACP (Certified in Audit Committee Practices)",
+        "name": "CACP (Certification in Audit Committee Practices)",
         "issuer": "",
         "year": ""
       },
@@ -296,14 +311,14 @@
         "degree": "S.Ak. (Sarjana Akuntansi)",
         "institution": "Universitas Widyatama",
         "year": ""
-      },
-      {
-        "degree": "Ak. (Akuntan)",
-        "institution": "Universitas Padjadjaran",
-        "year": ""
       }
     ],
     "certification": [
+      {
+        "name": "Ak. (Akuntan)",
+        "issuer": "",
+        "year": ""
+      },
       {
         "name": "CA (Chartered Accountant)",
         "issuer": "",
@@ -320,7 +335,7 @@
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
-        "institution": "Universitas Widyatama",
+        "institution": "Universitas Padjadjaran",
         "year": ""
       }
     ],

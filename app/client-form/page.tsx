@@ -252,7 +252,7 @@ export default function ClientFormPage() {
         setSubmitMessage(`❌ Error: ${error}`);
         console.error('Supabase error:', error);
       } else {
-        setSubmitMessage('✅ Form berhasil dikirim dan disimpan ke database! Terima kasih atas kepercayaan Anda kepada JSR Consulting Group.');
+        setSubmitMessage('✅ Form berhasil dikirim dan disimpan ke database! Terima kasih atas kepercayaan Anda kepada KAP JSR Cabang Bandung.');
         
         // Reset form after successful submission
         setTimeout(() => {
@@ -574,44 +574,40 @@ export default function ClientFormPage() {
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           Jumlah Pendapatan/Penjualan Tahun Audit *
                         </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">
-                            Rp
-                          </span>
-                          <input
-                            type="text"
-                            value={formatNumberWithCommas(company.jumlahPendapatan)}
-                            onChange={(e) => {
-                              const formattedValue = formatNumberWithCommas(e.target.value);
-                              const rawValue = removeCommas(formattedValue);
-                              handleCompanyDataChange(index, 'jumlahPendapatan', rawValue);
-                            }}
-                            className="w-full text-slate-900 font-medium pl-10 pr-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
-                            placeholder="1,000,000,000"
-                          />
-                        </div>
+                        <select
+                          value={company.jumlahPendapatan}
+                          onChange={(e) => handleCompanyDataChange(index, 'jumlahPendapatan', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                        >
+                          <option value="">Pilih Range Pendapatan</option>
+                          <option value="< 1 milyar">&lt; 1 milyar</option>
+                          <option value="1 - 10 milyar">1 - 10 milyar</option>
+                          <option value="10 - 50 milyar">10 - 50 milyar</option>
+                          <option value="50 - 100 milyar">50 - 100 milyar</option>
+                          <option value="100 - 500 milyar">100 - 500 milyar</option>
+                          <option value="500 milyar - 1 trilyun">500 milyar - 1 trilyun</option>
+                          <option value="> 1 trilyun">&gt; 1 trilyun</option>
+                        </select>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           Jumlah Aset *
                         </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">
-                            Rp
-                          </span>
-                          <input
-                            type="text"
-                            value={formatNumberWithCommas(company.jumlahAset)}
-                            onChange={(e) => {
-                              const formattedValue = formatNumberWithCommas(e.target.value);
-                              const rawValue = removeCommas(formattedValue);
-                              handleCompanyDataChange(index, 'jumlahAset', rawValue);
-                            }}
-                            className="w-full text-slate-900 font-medium pl-10 pr-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
-                            placeholder="500,000,000"
-                          />
-                        </div>
+                        <select
+                          value={company.jumlahAset}
+                          onChange={(e) => handleCompanyDataChange(index, 'jumlahAset', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                        >
+                          <option value="">Pilih Range Aset</option>
+                          <option value="< 1 milyar">&lt; 1 milyar</option>
+                          <option value="1 - 10 milyar">1 - 10 milyar</option>
+                          <option value="10 - 50 milyar">10 - 50 milyar</option>
+                          <option value="50 - 100 milyar">50 - 100 milyar</option>
+                          <option value="100 - 500 milyar">100 - 500 milyar</option>
+                          <option value="500 milyar - 1 trilyun">500 milyar - 1 trilyun</option>
+                          <option value="> 1 trilyun">&gt; 1 trilyun</option>
+                        </select>
                       </div>
                     </div>
                   </div>

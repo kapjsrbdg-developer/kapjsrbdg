@@ -187,7 +187,7 @@ export default function InfoPage() {
 
           {/* Button 6: Partner */}
           <Link
-            href="/employee/JSR-008"
+            href="/manager"
             className="group block w-full"
           >
             <div className="bg-white/95 backdrop-blur-sm border-2 border-indigo-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:border-indigo-400">
@@ -198,7 +198,7 @@ export default function InfoPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-indigo-600 text-lg">Manager</h3>
-                    <p className="text-slate-600 text-sm">Meet our manager</p>
+                    <p className="text-slate-600 text-sm">Meet our managers</p>
                   </div>
                 </div>
                 <div className="text-indigo-600 group-hover:translate-x-1 transition-transform duration-300">

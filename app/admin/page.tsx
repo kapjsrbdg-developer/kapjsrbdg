@@ -101,8 +101,8 @@ export default function AdminPage() {
             baseData[`KAP Sebelumnya${prefix}`] = company.namaKAPSebelumnya || '-';
             baseData[`Opini Sebelumnya${prefix}`] = company.opiniKAPSebelumnya || '-';
           }
-          baseData[`Pendapatan${prefix}`] = company.jumlahPendapatan ? `Rp ${parseInt(company.jumlahPendapatan).toLocaleString('id-ID')}` : '-';
-          baseData[`Aset${prefix}`] = company.jumlahAset ? `Rp ${parseInt(company.jumlahAset).toLocaleString('id-ID')}` : '-';
+          baseData[`Pendapatan${prefix}`] = company.jumlahPendapatan || '-';
+          baseData[`Aset${prefix}`] = company.jumlahAset || '-';
         });
 
         return baseData;
@@ -451,11 +451,11 @@ export default function AdminPage() {
                                 )}
                                 <div>
                                   <label className="text-slate-600">Pendapatan</label>
-                                  <div className="font-medium text-slate-900">Rp {company.jumlahPendapatan ? parseInt(company.jumlahPendapatan).toLocaleString('id-ID') : '-'}</div>
+                                  <div className="font-medium text-slate-900">{company.jumlahPendapatan || '-'}</div>
                                 </div>
                                 <div>
                                   <label className="text-slate-600">Aset</label>
-                                  <div className="font-medium text-slate-900">Rp {company.jumlahAset ? parseInt(company.jumlahAset).toLocaleString('id-ID') : '-'}</div>
+                                  <div className="font-medium text-slate-900">{company.jumlahAset || '-'}</div>
                                 </div>
                               </div>
                             </div>
