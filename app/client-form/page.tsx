@@ -676,7 +676,7 @@ export default function ClientFormPage() {
         {/* Back to Home */}
         <div className="text-center mt-8">
           <Link
-            href="/"
+            href="/info"
             className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-900 transition-colors"
           >
             ← Kembali ke Beranda
