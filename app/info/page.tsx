@@ -129,7 +129,7 @@ export default function InfoPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-orange-500 text-lg">Company Profile</h3>
-                    <p className="text-slate-600 text-sm">Download PDF brochure</p>
+                    <p className="text-slate-600 text-sm">See PDF</p>
                   </div>
                 </div>
                 <div className="text-orange-500 group-hover:translate-x-1 transition-transform duration-300">
