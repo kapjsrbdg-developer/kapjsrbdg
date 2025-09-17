@@ -298,7 +298,7 @@ export default function ClientFormPage() {
           </div>
           <div className="mt-4">
             <h1 className="text-3xl font-bold text-blue-900 mb-1">Form Konsultasi Klien</h1>
-            <p className="text-slate-600">PT. JSR Consulting Group</p>
+            <p className="text-slate-600">KAP JSR Cabang Bandung</p>
           </div>
         </div>
 
