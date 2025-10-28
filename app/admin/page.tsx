@@ -86,6 +86,9 @@ export default function AdminPage() {
           'Nomor HP': form.nomor_hp,
           'Jumlah Entitas': form.jumlah_entitas,
           'Jasa yang Dibutuhkan': jasaArray.join(', '),
+          'Tujuan Audit': form.tujuan_audit === 'Lainnya' 
+            ? `Lainnya (${form.tujuan_audit_lainnya || '-'})` 
+            : form.tujuan_audit || '-',
           'Tanggal Submit': form.created_at ? formatDate(form.created_at) : '-'
         };
 
@@ -394,6 +397,14 @@ export default function AdminPage() {
                                   {jasa}
                                 </span>
                               ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-sm text-slate-600">Tujuan Audit</label>
+                            <div className="font-medium text-slate-900">
+                              {selectedForm.tujuan_audit === 'Lainnya' 
+                                ? `${selectedForm.tujuan_audit} (${selectedForm.tujuan_audit_lainnya || '-'})` 
+                                : selectedForm.tujuan_audit || '-'}
                             </div>
                           </div>
                         </div>

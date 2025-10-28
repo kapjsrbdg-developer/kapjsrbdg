@@ -44,6 +44,8 @@ interface FormData {
   personalData: PersonalData;
   jumlahEntitas: number;
   jasaYangDibutuhkan: string[];
+  tujuanAudit: string;
+  tujuanAuditLainnya?: string;
   companies: CompanyData[];
 }
 
@@ -72,6 +74,15 @@ const jasaOptions = [
   'Lainnya'
 ];
 
+const tujuanAuditOptions = [
+  'Perbankan',
+  'Tender',
+  'Peraturan BI/OJK',
+  'Perpajakan',
+  'Internal',
+  'Lainnya'
+];
+
 export default function ClientFormPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +92,8 @@ export default function ClientFormPage() {
     personalData: initialPersonalData,
     jumlahEntitas: 1,
     jasaYangDibutuhkan: [],
+    tujuanAudit: '',
+    tujuanAuditLainnya: '',
     companies: [initialCompanyData]
   });
 
@@ -121,6 +134,14 @@ export default function ClientFormPage() {
       jasaYangDibutuhkan: checked 
         ? [...prev.jasaYangDibutuhkan, jasa]
         : prev.jasaYangDibutuhkan.filter(j => j !== jasa)
+    }));
+  };
+
+  const handleTujuanAuditChange = (tujuan: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tujuanAudit: tujuan,
+      tujuanAuditLainnya: tujuan === 'Lainnya' ? prev.tujuanAuditLainnya : ''
     }));
   };
 
@@ -235,6 +256,16 @@ export default function ClientFormPage() {
         return;
       }
 
+      if (!formData.tujuanAudit) {
+        setSubmitMessage('❌ Mohon pilih tujuan audit.');
+        return;
+      }
+
+      if (formData.tujuanAudit === 'Lainnya' && !formData.tujuanAuditLainnya?.trim()) {
+        setSubmitMessage('❌ Mohon isi tujuan audit lainnya.');
+        return;
+      }
+
       // Validate each company data
       for (let i = 0; i < companies.length; i++) {
         const company = companies[i];
@@ -260,6 +291,8 @@ export default function ClientFormPage() {
             personalData: initialPersonalData,
             jumlahEntitas: 1,
             jasaYangDibutuhkan: [],
+            tujuanAudit: '',
+            tujuanAuditLainnya: '',
             companies: [initialCompanyData]
           });
           setCurrentStep(1);
@@ -446,6 +479,33 @@ export default function ClientFormPage() {
                       </label>
                     ))}
                   </div>
+                </div>
+
+                {/* Tujuan Audit */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Tujuan Audit *
+                  </label>
+                  <select
+                    value={formData.tujuanAudit}
+                    onChange={(e) => handleTujuanAuditChange(e.target.value)}
+                    className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                  >
+                    <option value="">Pilih tujuan audit</option>
+                    {tujuanAuditOptions.map(tujuan => (
+                      <option key={tujuan} value={tujuan}>{tujuan}</option>
+                    ))}
+                  </select>
+                  
+                  {formData.tujuanAudit === 'Lainnya' && (
+                    <input
+                      type="text"
+                      value={formData.tujuanAuditLainnya || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tujuanAuditLainnya: e.target.value }))}
+                      className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                      placeholder="Sebutkan tujuan audit lainnya"
+                    />
+                  )}
                 </div>
 
                 {/* Company Details */}

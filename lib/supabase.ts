@@ -14,6 +14,8 @@ export interface ClientFormData {
   email: string;
   jumlah_entitas: number;
   jasa_yang_dibutuhkan: string;
+  tujuan_audit: string;
+  tujuan_audit_lainnya?: string;
   companies: string;
   created_at?: string;
   updated_at?: string;
@@ -41,6 +43,8 @@ export const insertClientForm = async (formData: {
   };
   jumlahEntitas: number;
   jasaYangDibutuhkan: string[];
+  tujuanAudit: string;
+  tujuanAuditLainnya?: string;
   companies: CompanyFormData[];
 }) => {
   try {
@@ -58,6 +62,8 @@ export const insertClientForm = async (formData: {
       email: formData.personalData.email,
       jumlah_entitas: formData.jumlahEntitas,
       jasa_yang_dibutuhkan: JSON.stringify(formData.jasaYangDibutuhkan),
+      tujuan_audit: formData.tujuanAudit,
+      tujuan_audit_lainnya: formData.tujuanAuditLainnya,
       companies: JSON.stringify(formData.companies),
     };
 
