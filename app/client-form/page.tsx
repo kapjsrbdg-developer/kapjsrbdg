@@ -46,6 +46,7 @@ interface FormData {
   jasaYangDibutuhkan: string[];
   tujuanAudit: string;
   tujuanAuditLainnya?: string;
+  deskripsi: string;
   companies: CompanyData[];
 }
 
@@ -94,6 +95,7 @@ export default function ClientFormPage() {
     jasaYangDibutuhkan: [],
     tujuanAudit: '',
     tujuanAuditLainnya: '',
+    deskripsi: '',
     companies: [initialCompanyData]
   });
 
@@ -293,6 +295,7 @@ export default function ClientFormPage() {
             jasaYangDibutuhkan: [],
             tujuanAudit: '',
             tujuanAuditLainnya: '',
+            deskripsi: '',
             companies: [initialCompanyData]
           });
           setCurrentStep(1);
@@ -506,6 +509,23 @@ export default function ClientFormPage() {
                       placeholder="Sebutkan tujuan audit lainnya"
                     />
                   )}
+                </div>
+
+                {/* Deskripsi - Darimana Anda mengetahui KAP JSR */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Darimana Anda mengetahui KAP JSR?
+                  </label>
+                  <textarea
+                    value={formData.deskripsi}
+                    onChange={(e) => setFormData(prev => ({ ...prev, deskripsi: e.target.value }))}
+                    className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 min-h-[80px]"
+                    placeholder="Contoh: Referensi dari teman, pencarian Google, media sosial, dll."
+                    rows={3}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    (Opsional) Bantu kami memahami lebih baik bagaimana Anda menemukan KAP JSR
+                  </p>
                 </div>
 
                 {/* Company Details */}

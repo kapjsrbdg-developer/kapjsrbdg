@@ -16,6 +16,7 @@ export interface ClientFormData {
   jasa_yang_dibutuhkan: string;
   tujuan_audit: string;
   tujuan_audit_lainnya?: string;
+  deskripsi?: string;
   companies: string;
   created_at?: string;
   updated_at?: string;
@@ -45,6 +46,7 @@ export const insertClientForm = async (formData: {
   jasaYangDibutuhkan: string[];
   tujuanAudit: string;
   tujuanAuditLainnya?: string;
+  deskripsi?: string;
   companies: CompanyFormData[];
 }) => {
   try {
@@ -64,6 +66,7 @@ export const insertClientForm = async (formData: {
       jasa_yang_dibutuhkan: JSON.stringify(formData.jasaYangDibutuhkan),
       tujuan_audit: formData.tujuanAudit,
       tujuan_audit_lainnya: formData.tujuanAuditLainnya,
+      deskripsi: formData.deskripsi,
       companies: JSON.stringify(formData.companies),
     };
 

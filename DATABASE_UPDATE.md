@@ -1,8 +1,8 @@
-# Update Database: Tambah Kolom Tujuan Audit
+# Update Database: Tambah Kolom Tujuan Audit & Deskripsi
 
 ## ⚠️ Penting: Update Database Supabase
 
-Setelah menambahkan field "Tujuan Audit" ke form, Anda perlu menambahkan 2 kolom baru di tabel `client_forms` di Supabase.
+Setelah menambahkan field "Tujuan Audit" dan "Darimana Anda mengetahui KAP JSR" ke form, Anda perlu menambahkan kolom-kolom baru di tabel `client_forms` di Supabase.
 
 ## Langkah-Langkah Update
 
@@ -24,6 +24,11 @@ ADD COLUMN IF NOT EXISTS tujuan_audit TEXT;
 ALTER TABLE client_forms 
 ADD COLUMN IF NOT EXISTS tujuan_audit_lainnya TEXT;
 
+-- Kolom deskripsi sudah ada di database, tidak perlu ditambahkan lagi
+-- Jika belum ada, jalankan query berikut:
+-- ALTER TABLE client_forms 
+-- ADD COLUMN IF NOT EXISTS deskripsi TEXT;
+
 -- Verifikasi kolom sudah ditambahkan
 SELECT column_name, data_type 
 FROM information_schema.columns 
@@ -36,6 +41,7 @@ ORDER BY ordinal_position;
 Setelah menjalankan query, Anda akan melihat daftar semua kolom di tabel `client_forms`, termasuk:
 - `tujuan_audit` (TEXT)
 - `tujuan_audit_lainnya` (TEXT)
+- `deskripsi` (TEXT) ← Sudah ada sebelumnya
 
 ## Struktur Tabel Lengkap
 
@@ -51,13 +57,15 @@ client_forms
 ├── jasa_yang_dibutuhkan (text, JSON array)
 ├── tujuan_audit (text) ← BARU
 ├── tujuan_audit_lainnya (text) ← BARU
+├── deskripsi (text) ← Digunakan untuk "Darimana mengetahui KAP JSR"
 ├── companies (text, JSON array)
 ├── created_at (timestamp)
 └── updated_at (timestamp)
 ```
 
-## Nilai Tujuan Audit
+## Nilai Field Baru
 
+### Tujuan Audit
 Field `tujuan_audit` akan berisi salah satu dari:
 - **Perbankan**
 - **Tender**
@@ -66,12 +74,25 @@ Field `tujuan_audit` akan berisi salah satu dari:
 - **Internal**
 - **Lainnya** (jika dipilih, detail akan tersimpan di `tujuan_audit_lainnya`)
 
+### Deskripsi
+Field `deskripsi` sekarang digunakan untuk menyimpan jawaban dari:
+**"Darimana Anda mengetahui KAP JSR?"**
+
+Contoh jawaban:
+- "Referensi dari teman"
+- "Pencarian Google"
+- "Media sosial Instagram"
+- "Rekomendasi dari bank"
+- dll.
+
 ## Catatan
 
 - Kolom `tujuan_audit` adalah **wajib** (required) di form, tapi di database nullable untuk data lama
 - Kolom `tujuan_audit_lainnya` adalah **optional**, hanya terisi jika user memilih "Lainnya"
-- Data submission yang sudah ada sebelumnya akan memiliki nilai NULL untuk kedua kolom ini
+- Kolom `deskripsi` adalah **optional** di form, user bisa mengosongkan
+- Data submission yang sudah ada sebelumnya akan memiliki nilai NULL untuk kolom `tujuan_audit` dan `tujuan_audit_lainnya`
 
 ---
 
-**Status:** ✅ Update selesai di code, tinggal jalankan SQL query di Supabase Dashboard
+**Status:** ✅ Update selesai di code, tinggal jalankan SQL query di Supabase Dashboard (hanya untuk tujuan_audit)
+

@@ -89,6 +89,7 @@ export default function AdminPage() {
           'Tujuan Audit': form.tujuan_audit === 'Lainnya' 
             ? `Lainnya (${form.tujuan_audit_lainnya || '-'})` 
             : form.tujuan_audit || '-',
+          'Darimana Mengetahui KAP JSR': form.deskripsi || '-',
           'Tanggal Submit': form.created_at ? formatDate(form.created_at) : '-'
         };
 
@@ -407,6 +408,12 @@ export default function AdminPage() {
                                 : selectedForm.tujuan_audit || '-'}
                             </div>
                           </div>
+                          {selectedForm.deskripsi && (
+                            <div>
+                              <label className="text-sm text-slate-600">Darimana Mengetahui KAP JSR</label>
+                              <div className="font-medium text-slate-900">{selectedForm.deskripsi}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
