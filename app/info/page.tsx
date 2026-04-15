@@ -6,7 +6,7 @@ import Link from 'next/link';
 export default function InfoPage() {
   const handlePDFClick = () => {
     // Link Google Drive akan diisi nanti
-    const googleDriveLink = "https://drive.google.com/file/d/1SsNUnys3U7hcBJ09XowKU6vqzfUacQHU/view"; // Akan diisi dengan link PDF dari Google Drive
+    const googleDriveLink = "https://drive.google.com/file/d/1y4Ju6z09OLthPHlm9poeMMY62i8XuOlu/view?usp=sharing"; // Akan diisi dengan link PDF dari Google Drive
     
     if (googleDriveLink) {
       window.open(googleDriveLink, '_blank');
