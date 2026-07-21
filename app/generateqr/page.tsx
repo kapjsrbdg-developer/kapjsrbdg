@@ -26,7 +26,7 @@ interface FormState {
 }
 
 // AP penanggung jawab yang tersedia di dropdown
-const AP_OPTIONS = ['Sony Devano', 'Nurmala Arifin', 'Lainnya'] as const;
+const AP_OPTIONS = ['Dr. H. Sony Devano, SE., SH., Ak., M.Ak., CA., BKP., CACP., CPA.', 'Nurmala Arifin, SE., SH., Ak., M.Ak., CA., BKP., CACP., CPA., CTA.', 'Lainnya'] as const;
 
 const DEFAULT_KAP = 'KAP Jojo Sunarjo & Rekan Cabang Bandung';
 
