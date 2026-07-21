@@ -235,6 +235,7 @@ export interface ReportValidation {
   tanggal_terbit: string; // format YYYY-MM-DD
   ap_penanggung_jawab: string;
   file_path?: string | null; // path PDF di Supabase Storage
+  is_deleted?: boolean; // soft delete; disaring otomatis oleh fungsi DB
   created_at?: string;
 }
 

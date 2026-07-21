@@ -16,13 +16,16 @@ CREATE TABLE IF NOT EXISTS report_validations (
   tanggal_terbit DATE NOT NULL,
   ap_penanggung_jawab TEXT NOT NULL,    -- nama AP (dropdown atau input manual "Lainnya")
   file_path TEXT,                       -- path PDF di storage (nullable utk data lama)
+  is_deleted BOOLEAN NOT NULL DEFAULT FALSE, -- soft delete: cukup set TRUE
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_report_validations_kode ON report_validations(kode);
 
--- Kalau tabel SUDAH ada sebelumnya, tambahkan kolom file_path:
+-- Kalau tabel SUDAH ada sebelumnya, tambahkan kolom baru:
 ALTER TABLE report_validations ADD COLUMN IF NOT EXISTS file_path TEXT;
+ALTER TABLE report_validations
+  ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- 2. Aktifkan RLS: izinkan INSERT (dari aplikasi), TUTUP SELECT publik.
 ALTER TABLE report_validations ENABLE ROW LEVEL SECURITY;
@@ -44,7 +47,9 @@ LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT * FROM report_validations WHERE kode = p_kode LIMIT 1;
+  SELECT * FROM report_validations
+  WHERE kode = p_kode AND is_deleted = FALSE
+  LIMIT 1;
 $$;
 
 -- Izinkan aplikasi (anon key) dan user login memanggil fungsi ini.
@@ -59,7 +64,9 @@ LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT * FROM report_validations ORDER BY created_at DESC;
+  SELECT * FROM report_validations
+  WHERE is_deleted = FALSE
+  ORDER BY created_at DESC;
 $$;
 
 GRANT EXECUTE ON FUNCTION list_report_validations() TO anon, authenticated;
