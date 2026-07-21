@@ -146,6 +146,10 @@ export default function GenerateQrPage() {
   const [editingKode, setEditingKode] = useState<string | null>(null);
   const [existingFilePath, setExistingFilePath] = useState<string | null>(null);
 
+  // Menandai QR yang sedang tampil berasal dari Riwayat (bukan baru dibuat),
+  // supaya tab aktif tetap "Riwayat QR" dan tombol "Buat QR Baru" disembunyikan.
+  const [viewedFromHistory, setViewedFromHistory] = useState(false);
+
   // Riwayat QR (dashboard admin)
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<ReportValidation[]>([]);
@@ -273,6 +277,8 @@ export default function GenerateQrPage() {
 
         const url = `${buildBaseUrl()}/validasi/${editingKode}`;
         const qrDataUrl = await buildQrDataUrl(url);
+        // Hasil edit adalah QR lama, jadi diperlakukan seperti dari Riwayat
+        setViewedFromHistory(true);
         setResult({ kode: editingKode, url, qrDataUrl, report: reportData });
         setEditingKode(null);
         setFile(null);
@@ -332,6 +338,7 @@ export default function GenerateQrPage() {
       const url = `${buildBaseUrl()}/validasi/${kode}`;
       const qrDataUrl = await buildQrDataUrl(url);
 
+      setViewedFromHistory(false);
       setResult({ kode, url, qrDataUrl, report: reportData });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
@@ -368,6 +375,7 @@ export default function GenerateQrPage() {
     setFile(null);
     setEditingKode(null);
     setExistingFilePath(null);
+    setViewedFromHistory(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -400,6 +408,7 @@ export default function GenerateQrPage() {
   const loadHistory = async () => {
     setShowHistory(true);
     setResult(null);
+    setViewedFromHistory(false);
     setHistoryLoading(true);
     setHistoryError('');
     const { data, error } = await getAllReportValidations();
@@ -412,6 +421,7 @@ export default function GenerateQrPage() {
   const showQrFromHistory = async (rec: ReportValidation) => {
     const url = `${buildBaseUrl()}/validasi/${rec.kode}`;
     const qrDataUrl = await buildQrDataUrl(url);
+    setViewedFromHistory(true);
     setResult({
       kode: rec.kode,
       url,
@@ -456,6 +466,9 @@ export default function GenerateQrPage() {
   const inputClass =
     'w-full px-4 py-3 border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200';
 
+  // Tab "Riwayat QR" tetap aktif saat kita sedang melihat QR lama dari riwayat
+  const historyActive = showHistory || viewedFromHistory;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 relative overflow-hidden">
       {/* Background Pattern */}
@@ -498,10 +511,12 @@ export default function GenerateQrPage() {
           <button
             onClick={() => {
               setShowHistory(false);
-              if (editingKode) handleReset();
+              // Kembali ke form kosong kalau sedang mengedit atau
+              // sedang melihat QR lama dari riwayat.
+              if (editingKode || viewedFromHistory) handleReset();
             }}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-              !showHistory ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
+              !historyActive ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
             }`}
           >
             Buat QR
@@ -509,7 +524,7 @@ export default function GenerateQrPage() {
           <button
             onClick={loadHistory}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
-              showHistory ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
+              historyActive ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
             }`}
           >
             Riwayat QR
@@ -840,12 +855,15 @@ export default function GenerateQrPage() {
                 </svg>
                 Download QR (PNG)
               </button>
-              <button
-                onClick={handleReset}
-                className="flex-1 bg-blue-900 text-white font-medium py-3 px-4 rounded-lg hover:bg-blue-800 transition-all duration-200"
-              >
-                Buat QR Baru
-              </button>
+              {/* QR dari riwayat: cukup tombol download saja */}
+              {!viewedFromHistory && (
+                <button
+                  onClick={handleReset}
+                  className="flex-1 bg-blue-900 text-white font-medium py-3 px-4 rounded-lg hover:bg-blue-800 transition-all duration-200"
+                >
+                  Buat QR Baru
+                </button>
+              )}
             </div>
           </div>
         )}
