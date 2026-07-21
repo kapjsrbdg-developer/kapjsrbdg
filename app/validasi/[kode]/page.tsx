@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { getReportValidationByKode } from '../../../lib/supabase';
+import { getReportValidationByKode, getReportFileUrl } from '../../../lib/supabase';
+import PdfViewer from '../../../components/PdfViewer';
 
 // Data validasi dibuat saat runtime, jadi halaman ini selalu dinamis.
 export const dynamic = 'force-dynamic';
@@ -32,6 +33,7 @@ const formatTanggal = (value?: string) => {
 export default async function ValidasiPage({ params }: ValidasiPageProps) {
   const { kode } = await params;
   const { data: report } = await getReportValidationByKode(kode);
+  const fileUrl = report?.file_path ? getReportFileUrl(report.file_path) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-green-50 to-slate-100 relative overflow-hidden">
@@ -42,7 +44,7 @@ export default async function ValidasiPage({ params }: ValidasiPageProps) {
         <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-gradient-to-br from-blue-900 via-blue-800 to-green-600 rounded-full blur-3xl transform translate-y-1/3"></div>
       </div>
 
-      <div className="container mx-auto px-4 py-10 relative z-10 max-w-xl">
+      <div className="container mx-auto px-4 py-10 relative z-10 max-w-2xl">
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center p-4 bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl border-2 border-white/50">
@@ -62,6 +64,7 @@ export default async function ValidasiPage({ params }: ValidasiPageProps) {
 
         {report ? (
           /* ===== DOKUMEN VALID ===== */
+          <>
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
             {/* Status header */}
             <div className="bg-gradient-to-r from-blue-900 to-green-600 p-8 text-center text-white">
@@ -99,6 +102,24 @@ export default async function ValidasiPage({ params }: ValidasiPageProps) {
               </div>
             </div>
           </div>
+
+          {/* Dokumen PDF */}
+          {fileUrl && (
+            <div className="mt-6 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">
+              <div className="px-6 pt-6 pb-4 md:px-8">
+                <h2 className="text-lg font-bold text-blue-900 mb-1">
+                  Dokumen Laporan
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Hanya untuk dilihat. Dokumen ini tidak disediakan untuk diunduh.
+                </p>
+              </div>
+              <div className="px-6 pb-6 md:px-8">
+                <PdfViewer url={fileUrl} />
+              </div>
+            </div>
+          )}
+          </>
         ) : (
           /* ===== DOKUMEN TIDAK DITEMUKAN ===== */
           <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50 overflow-hidden">

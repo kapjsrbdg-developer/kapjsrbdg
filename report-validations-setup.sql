@@ -15,10 +15,14 @@ CREATE TABLE IF NOT EXISTS report_validations (
   no_laporan TEXT NOT NULL,
   tanggal_terbit DATE NOT NULL,
   ap_penanggung_jawab TEXT NOT NULL,    -- nama AP (dropdown atau input manual "Lainnya")
+  file_path TEXT,                       -- path PDF di storage (nullable utk data lama)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_report_validations_kode ON report_validations(kode);
+
+-- Kalau tabel SUDAH ada sebelumnya, tambahkan kolom file_path:
+ALTER TABLE report_validations ADD COLUMN IF NOT EXISTS file_path TEXT;
 
 -- 2. Aktifkan RLS: izinkan INSERT (dari aplikasi), TUTUP SELECT publik.
 ALTER TABLE report_validations ENABLE ROW LEVEL SECURITY;
@@ -60,6 +64,27 @@ $$;
 
 GRANT EXECUTE ON FUNCTION list_report_validations() TO anon, authenticated;
 
--- 5. (Opsional) Verifikasi
+-- 5. Storage bucket untuk file PDF laporan.
+--    Bucket dibuat PUBLIC supaya halaman validasi bisa menampilkan PDF-nya.
+--    CATATAN: karena publik, siapa pun yang tahu URL file bisa mengunduhnya.
+--    Tombol download di viewer disembunyikan, tapi itu bukan proteksi mutlak.
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('report-files', 'report-files', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Izinkan upload dari aplikasi (anon key), sejalan dengan pola tabel lain.
+DROP POLICY IF EXISTS "Upload report files" ON storage.objects;
+CREATE POLICY "Upload report files"
+ON storage.objects FOR INSERT
+TO anon, authenticated
+WITH CHECK (bucket_id = 'report-files');
+
+DROP POLICY IF EXISTS "Read report files" ON storage.objects;
+CREATE POLICY "Read report files"
+ON storage.objects FOR SELECT
+TO anon, authenticated
+USING (bucket_id = 'report-files');
+
+-- 6. (Opsional) Verifikasi
 -- SELECT column_name, data_type FROM information_schema.columns
 -- WHERE table_name = 'report_validations' ORDER BY ordinal_position;

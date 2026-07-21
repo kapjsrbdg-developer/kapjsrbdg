@@ -234,8 +234,43 @@ export interface ReportValidation {
   no_laporan: string;
   tanggal_terbit: string; // format YYYY-MM-DD
   ap_penanggung_jawab: string;
+  file_path?: string | null; // path PDF di Supabase Storage
   created_at?: string;
 }
+
+// Nama bucket penyimpanan PDF laporan
+export const REPORT_FILES_BUCKET = 'report-files';
+
+// Upload PDF laporan. Nama file memakai kode unik supaya tidak bentrok.
+export const uploadReportFile = async (kode: string, file: File) => {
+  try {
+    const path = `${kode}.pdf`;
+    const { error } = await supabase.storage
+      .from(REPORT_FILES_BUCKET)
+      .upload(path, file, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
+
+    if (error) {
+      throw new Error(`Upload gagal: ${error.message}`);
+    }
+
+    return { path, error: null };
+  } catch (error) {
+    console.error('Error uploading report file:', error);
+    return {
+      path: null,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+};
+
+// URL publik untuk menampilkan PDF di halaman validasi.
+export const getReportFileUrl = (path: string): string => {
+  const { data } = supabase.storage.from(REPORT_FILES_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+};
 
 // Generate kode unik yang tidak mudah ditebak (contoh: "JSR-7K4M9QXP").
 // Kode dibuat di aplikasi supaya kita tidak perlu membaca ulang dari database
@@ -276,6 +311,7 @@ export const insertReportValidation = async (payload: {
   noLaporan: string;
   tanggalTerbit: string;
   apPenanggungJawab: string;
+  filePath?: string | null;
 }) => {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -294,6 +330,7 @@ export const insertReportValidation = async (payload: {
         no_laporan: payload.noLaporan,
         tanggal_terbit: payload.tanggalTerbit,
         ap_penanggung_jawab: payload.apPenanggungJawab,
+        file_path: payload.filePath ?? null,
       },
     ]);
 

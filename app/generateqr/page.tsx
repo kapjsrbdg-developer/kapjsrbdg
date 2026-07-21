@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import QRCode from 'qrcode';
@@ -10,6 +10,7 @@ import {
   generateValidationCode,
   insertReportValidation,
   getAllReportValidations,
+  uploadReportFile,
   type ReportValidation,
 } from '../../lib/supabase';
 import AdminLogin from '../../components/AdminLogin';
@@ -29,6 +30,9 @@ interface FormState {
 const AP_OPTIONS = ['Dr. H. Sony Devano, SE., SH., Ak., M.Ak., CA., BKP., CACP., CPA.', 'Nurmala Arifin, SE., SH., Ak., M.Ak., CA., BKP., CACP., CPA., CTA.', 'Lainnya'] as const;
 
 const DEFAULT_KAP = 'KAP Jojo Sunarjo & Rekan Cabang Bandung';
+
+// Batas upload PDF: 2 MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const emptyForm: FormState = {
   namaKap: DEFAULT_KAP,
@@ -133,6 +137,10 @@ export default function GenerateQrPage() {
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Upload PDF laporan (wajib)
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Riwayat QR (dashboard admin)
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<ReportValidation[]>([]);
@@ -161,6 +169,38 @@ export default function GenerateQrPage() {
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError('');
+    const picked = e.target.files?.[0] ?? null;
+
+    if (!picked) {
+      setFile(null);
+      return;
+    }
+
+    const isPdf =
+      picked.type === 'application/pdf' ||
+      picked.name.toLowerCase().endsWith('.pdf');
+
+    if (!isPdf) {
+      setError('File harus berformat PDF.');
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (picked.size > MAX_FILE_SIZE) {
+      setError(
+        `Ukuran file ${(picked.size / 1024 / 1024).toFixed(2)} MB melebihi batas 2 MB.`,
+      );
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setFile(picked);
+  };
+
   const buildBaseUrl = (): string => {
     const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (envUrl) return envUrl.replace(/\/$/, '');
@@ -188,6 +228,11 @@ export default function GenerateQrPage() {
       return;
     }
 
+    if (!file) {
+      setError('Silakan pilih dokumen PDF laporan.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const reportData = {
@@ -200,13 +245,35 @@ export default function GenerateQrPage() {
         apPenanggungJawab: apFinal,
       };
 
-      // Buat kode unik, dengan retry kalau kebetulan bentrok (sangat jarang).
+      // Buat kode unik, upload PDF, lalu simpan record.
+      // Upload didahulukan supaya kalau gagal, tidak ada record menggantung.
       let kode = generateValidationCode();
-      let insertRes = await insertReportValidation({ kode, ...reportData });
+      let uploadRes = await uploadReportFile(kode, file);
+      if (uploadRes.error) {
+        setError(uploadRes.error);
+        return;
+      }
+
+      let insertRes = await insertReportValidation({
+        kode,
+        ...reportData,
+        filePath: uploadRes.path,
+      });
+
+      // Retry kalau kode kebetulan bentrok (sangat jarang).
       let attempts = 0;
       while (insertRes.error === 'DUPLICATE_CODE' && attempts < 5) {
         kode = generateValidationCode();
-        insertRes = await insertReportValidation({ kode, ...reportData });
+        uploadRes = await uploadReportFile(kode, file);
+        if (uploadRes.error) {
+          setError(uploadRes.error);
+          return;
+        }
+        insertRes = await insertReportValidation({
+          kode,
+          ...reportData,
+          filePath: uploadRes.path,
+        });
         attempts += 1;
       }
 
@@ -255,6 +322,8 @@ export default function GenerateQrPage() {
     setForm(emptyForm);
     setResult(null);
     setError('');
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const loadHistory = async () => {
@@ -544,6 +613,29 @@ export default function GenerateQrPage() {
                   placeholder="Tulis nama AP penanggung jawab"
                   className={`${inputClass} mt-3`}
                 />
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Dokumen Laporan (PDF) <span className="text-red-500">*</span>
+              </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={handleFileChange}
+                required
+                disabled={submitting}
+                className="w-full text-sm text-slate-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-900 file:text-white hover:file:bg-blue-800 file:cursor-pointer border border-slate-300 rounded-lg p-2"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Hanya file PDF, maksimal 2 MB.
+              </p>
+              {file && (
+                <p className="text-xs text-green-700 mt-1 font-medium">
+                  ✓ {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
               )}
             </div>
 
