@@ -79,6 +79,17 @@ export default function GenerateQrPage() {
   useEffect(() => {
     setIsAuthenticated(!!checkAuth());
     setCheckingAuth(false);
+
+    // Cek ulang saat halaman dipulihkan dari bfcache (tombol Back browser),
+    // supaya tampilan tidak "kembali login" padahal sudah logout.
+    const handlePageShow = () => {
+      if (!checkAuth()) {
+        setIsAuthenticated(false);
+        setResult(null);
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
   const handleChange =
