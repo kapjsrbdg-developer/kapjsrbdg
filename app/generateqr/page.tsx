@@ -68,6 +68,61 @@ const formatTanggal = (value: string): string => {
   });
 };
 
+const QR_SIZE = 600;
+
+// Buat QR (PNG data URL) dengan logo JSR di tengahnya.
+// Aman dipindai karena error correction level "H" mentoleransi ~30% area
+// tertutup, sementara logo di sini hanya menutup sekitar 6%.
+const buildQrDataUrl = async (url: string): Promise<string> => {
+  const canvas = document.createElement('canvas');
+
+  await QRCode.toCanvas(canvas, url, {
+    width: QR_SIZE,
+    margin: 2,
+    errorCorrectionLevel: 'H',
+    color: { dark: '#1e3a8a', light: '#ffffff' },
+  });
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas.toDataURL('image/png');
+
+  // Muat logo. Pakai window.Image karena `Image` di file ini adalah
+  // komponen next/image.
+  const logo = await new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = '/logo.svg';
+  });
+
+  // Kalau logo gagal dimuat, kembalikan QR polos (tetap berfungsi).
+  if (logo) {
+    const size = canvas.width;
+    const ratio = (logo.naturalWidth || 1640) / (logo.naturalHeight || 924);
+    const logoW = size * 0.26;
+    const logoH = logoW / ratio;
+    const pad = size * 0.02;
+    const boxW = logoW + pad * 2;
+    const boxH = logoH + pad * 2;
+    const boxX = (size - boxW) / 2;
+    const boxY = (size - boxH) / 2;
+
+    // Alas putih di belakang logo supaya kontras dan modul QR tidak tercampur
+    ctx.fillStyle = '#ffffff';
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxW, boxH, size * 0.02);
+      ctx.fill();
+    } else {
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+    }
+
+    ctx.drawImage(logo, boxX + pad, boxY + pad, logoW, logoH);
+  }
+
+  return canvas.toDataURL('image/png');
+};
+
 export default function GenerateQrPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -165,12 +220,7 @@ export default function GenerateQrPage() {
       }
 
       const url = `${buildBaseUrl()}/validasi/${kode}`;
-      const qrDataUrl = await QRCode.toDataURL(url, {
-        width: 600,
-        margin: 2,
-        errorCorrectionLevel: 'H',
-        color: { dark: '#1e3a8a', light: '#ffffff' },
-      });
+      const qrDataUrl = await buildQrDataUrl(url);
 
       setResult({ kode, url, qrDataUrl, report: reportData });
     } catch (err) {
@@ -221,12 +271,7 @@ export default function GenerateQrPage() {
   // Tampilkan (bentuk ulang) QR dari sebuah record riwayat.
   const showQrFromHistory = async (rec: ReportValidation) => {
     const url = `${buildBaseUrl()}/validasi/${rec.kode}`;
-    const qrDataUrl = await QRCode.toDataURL(url, {
-      width: 600,
-      margin: 2,
-      errorCorrectionLevel: 'H',
-      color: { dark: '#1e3a8a', light: '#ffffff' },
-    });
+    const qrDataUrl = await buildQrDataUrl(url);
     setResult({
       kode: rec.kode,
       url,
