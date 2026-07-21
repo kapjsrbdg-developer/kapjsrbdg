@@ -218,3 +218,126 @@ export const clearUserSession = () => {
     localStorage.removeItem('admin_user');
   }
 };
+
+// ============================================================
+// Report Validation (QR Code) Feature
+// ============================================================
+
+// Data untuk validasi keaslian dokumen via QR code
+export interface ReportValidation {
+  id?: string;
+  kode: string;
+  nama_kap: string;
+  nama_klien: string;
+  periode_awal: string; // format YYYY-MM-DD
+  periode_akhir: string; // format YYYY-MM-DD
+  no_laporan: string;
+  tanggal_terbit: string; // format YYYY-MM-DD
+  ap_penanggung_jawab: string;
+  created_at?: string;
+}
+
+// Generate kode unik yang tidak mudah ditebak (contoh: "JSR-7K4M9QXP").
+// Kode dibuat di aplikasi supaya kita tidak perlu membaca ulang dari database
+// (SELECT publik ditutup demi mencegah enumerasi data).
+export const generateValidationCode = (): string => {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // tanpa karakter ambigu (0/O/1/I)
+  const length = 8;
+  let code = '';
+
+  const cryptoObj =
+    typeof globalThis !== 'undefined' && 'crypto' in globalThis
+      ? (globalThis.crypto as Crypto | undefined)
+      : undefined;
+
+  if (cryptoObj?.getRandomValues) {
+    const bytes = new Uint8Array(length);
+    cryptoObj.getRandomValues(bytes);
+    for (let i = 0; i < length; i++) {
+      code += alphabet[bytes[i] % alphabet.length];
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      code += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+  }
+
+  return `JSR-${code}`;
+};
+
+// Simpan record validasi report. `kode` sudah dibuat di aplikasi sehingga
+// tidak perlu .select() (tabel tidak bisa dibaca publik oleh anon).
+export const insertReportValidation = async (payload: {
+  kode: string;
+  namaKap: string;
+  namaKlien: string;
+  periodeAwal: string;
+  periodeAkhir: string;
+  noLaporan: string;
+  tanggalTerbit: string;
+  apPenanggungJawab: string;
+}) => {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return {
+        error: 'Supabase configuration is missing. Please check your environment variables.',
+      };
+    }
+
+    const { error } = await supabase.from('report_validations').insert([
+      {
+        kode: payload.kode,
+        nama_kap: payload.namaKap,
+        nama_klien: payload.namaKlien,
+        periode_awal: payload.periodeAwal,
+        periode_akhir: payload.periodeAkhir,
+        no_laporan: payload.noLaporan,
+        tanggal_terbit: payload.tanggalTerbit,
+        ap_penanggung_jawab: payload.apPenanggungJawab,
+      },
+    ]);
+
+    if (error) {
+      // 23505 = unique_violation (kode kebetulan sudah dipakai)
+      if (error.code === '23505') {
+        return { error: 'DUPLICATE_CODE' };
+      }
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error inserting report validation:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+};
+
+// Ambil satu record validasi berdasarkan kode, lewat fungsi SECURITY DEFINER
+// di database. Tabel-nya sendiri tidak bisa dibaca publik, jadi orang hanya
+// bisa mengambil data kalau tahu kode uniknya (tidak bisa scrape massal).
+export const getReportValidationByKode = async (kode: string) => {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return { data: null, error: 'Supabase configuration is missing.' };
+    }
+
+    const { data, error } = await supabase.rpc('get_report_validation', {
+      p_kode: kode,
+    });
+
+    if (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    const record = Array.isArray(data) ? data[0] : data;
+    return { data: (record as ReportValidation) || null, error: null };
+  } catch (error) {
+    console.error('Error fetching report validation:', error);
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+};
