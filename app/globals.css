@@ -5,12 +5,9 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Situs ini didesain untuk tampilan terang (kartu selalu putih). Warna teks
+   dibuat tetap gelap walau perangkat dalam mode gelap, supaya teks (termasuk
+   isian form) tidak menjadi putih di atas latar putih. */
 
 body {
   background: var(--background);
