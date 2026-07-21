@@ -64,6 +64,42 @@ $$;
 
 GRANT EXECUTE ON FUNCTION list_report_validations() TO anon, authenticated;
 
+-- 4b. Fungsi update record (untuk tombol Edit di Riwayat QR).
+--     `kode` TIDAK ikut diubah, sehingga link/QR yang sudah terlanjur
+--     ditempel di dokumen tetap valid.
+--     p_file_path NULL berarti "jangan ubah file yang sudah ada".
+CREATE OR REPLACE FUNCTION update_report_validation(
+  p_kode TEXT,
+  p_nama_kap TEXT,
+  p_nama_klien TEXT,
+  p_periode_awal DATE,
+  p_periode_akhir DATE,
+  p_no_laporan TEXT,
+  p_tanggal_terbit DATE,
+  p_ap_penanggung_jawab TEXT,
+  p_file_path TEXT
+)
+RETURNS void
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  UPDATE report_validations
+  SET nama_kap = p_nama_kap,
+      nama_klien = p_nama_klien,
+      periode_awal = p_periode_awal,
+      periode_akhir = p_periode_akhir,
+      no_laporan = p_no_laporan,
+      tanggal_terbit = p_tanggal_terbit,
+      ap_penanggung_jawab = p_ap_penanggung_jawab,
+      file_path = COALESCE(p_file_path, file_path)
+  WHERE kode = p_kode;
+$$;
+
+GRANT EXECUTE ON FUNCTION update_report_validation(
+  TEXT, TEXT, TEXT, DATE, DATE, TEXT, DATE, TEXT, TEXT
+) TO anon, authenticated;
+
 -- 5. Storage bucket untuk file PDF laporan.
 --    Bucket dibuat PUBLIC supaya halaman validasi bisa menampilkan PDF-nya.
 --    CATATAN: karena publik, siapa pun yang tahu URL file bisa mengunduhnya.

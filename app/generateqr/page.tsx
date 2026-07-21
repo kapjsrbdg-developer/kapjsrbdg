@@ -9,6 +9,7 @@ import {
   clearUserSession,
   generateValidationCode,
   insertReportValidation,
+  updateReportValidation,
   getAllReportValidations,
   uploadReportFile,
   type ReportValidation,
@@ -137,9 +138,13 @@ export default function GenerateQrPage() {
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Upload PDF laporan (wajib)
+  // Upload PDF laporan (opsional — bisa dilampirkan belakangan lewat Edit)
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Mode edit: kalau terisi, form memperbarui record ini (kode tidak berubah)
+  const [editingKode, setEditingKode] = useState<string | null>(null);
+  const [existingFilePath, setExistingFilePath] = useState<string | null>(null);
 
   // Riwayat QR (dashboard admin)
   const [showHistory, setShowHistory] = useState(false);
@@ -228,10 +233,6 @@ export default function GenerateQrPage() {
       return;
     }
 
-    if (!file) {
-      setError('Silakan pilih dokumen PDF laporan.');
-      return;
-    }
 
     setSubmitting(true);
     try {
@@ -245,34 +246,76 @@ export default function GenerateQrPage() {
         apPenanggungJawab: apFinal,
       };
 
-      // Buat kode unik, upload PDF, lalu simpan record.
-      // Upload didahulukan supaya kalau gagal, tidak ada record menggantung.
-      let kode = generateValidationCode();
-      let uploadRes = await uploadReportFile(kode, file);
-      if (uploadRes.error) {
-        setError(uploadRes.error);
+      // ===== MODE EDIT: perbarui record, kode (dan QR) tetap sama =====
+      if (editingKode) {
+        let filePath: string | null = null;
+
+        // Hanya upload kalau ada file baru dipilih; kalau tidak, file lama tetap.
+        if (file) {
+          const uploadRes = await uploadReportFile(editingKode, file);
+          if (uploadRes.error) {
+            setError(uploadRes.error);
+            return;
+          }
+          filePath = uploadRes.path;
+        }
+
+        const updateRes = await updateReportValidation({
+          kode: editingKode,
+          ...reportData,
+          filePath,
+        });
+
+        if (updateRes.error) {
+          setError(updateRes.error);
+          return;
+        }
+
+        const url = `${buildBaseUrl()}/validasi/${editingKode}`;
+        const qrDataUrl = await buildQrDataUrl(url);
+        setResult({ kode: editingKode, url, qrDataUrl, report: reportData });
+        setEditingKode(null);
+        setFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         return;
+      }
+
+      // ===== MODE BUAT BARU =====
+      // Buat kode unik lebih dulu, lalu upload PDF kalau memang dilampirkan.
+      let kode = generateValidationCode();
+      let filePath: string | null = null;
+
+      if (file) {
+        const uploadRes = await uploadReportFile(kode, file);
+        if (uploadRes.error) {
+          setError(uploadRes.error);
+          return;
+        }
+        filePath = uploadRes.path;
       }
 
       let insertRes = await insertReportValidation({
         kode,
         ...reportData,
-        filePath: uploadRes.path,
+        filePath,
       });
 
       // Retry kalau kode kebetulan bentrok (sangat jarang).
       let attempts = 0;
       while (insertRes.error === 'DUPLICATE_CODE' && attempts < 5) {
         kode = generateValidationCode();
-        uploadRes = await uploadReportFile(kode, file);
-        if (uploadRes.error) {
-          setError(uploadRes.error);
-          return;
+        if (file) {
+          const retryUpload = await uploadReportFile(kode, file);
+          if (retryUpload.error) {
+            setError(retryUpload.error);
+            return;
+          }
+          filePath = retryUpload.path;
         }
         insertRes = await insertReportValidation({
           kode,
           ...reportData,
-          filePath: uploadRes.path,
+          filePath,
         });
         attempts += 1;
       }
@@ -323,7 +366,35 @@ export default function GenerateQrPage() {
     setResult(null);
     setError('');
     setFile(null);
+    setEditingKode(null);
+    setExistingFilePath(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Buka record riwayat di form untuk diperbarui (kode & QR tidak berubah).
+  const handleEdit = (rec: ReportValidation) => {
+    const isKnownAp = (AP_OPTIONS as readonly string[]).includes(
+      rec.ap_penanggung_jawab,
+    );
+
+    setForm({
+      namaKap: rec.nama_kap,
+      namaKlien: rec.nama_klien,
+      periodeAwal: (rec.periode_awal || '').slice(0, 10),
+      periodeAkhir: (rec.periode_akhir || '').slice(0, 10),
+      noLaporan: rec.no_laporan,
+      tanggalTerbit: (rec.tanggal_terbit || '').slice(0, 10),
+      apPenanggungJawab: isKnownAp ? rec.ap_penanggung_jawab : 'Lainnya',
+      apLainnya: isKnownAp ? '' : rec.ap_penanggung_jawab,
+    });
+
+    setEditingKode(rec.kode);
+    setExistingFilePath(rec.file_path ?? null);
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setShowHistory(false);
+    setResult(null);
+    setError('');
   };
 
   const loadHistory = async () => {
@@ -425,7 +496,10 @@ export default function GenerateQrPage() {
         {/* Nav: Buat QR / Riwayat */}
         <div className="flex justify-center gap-2 mb-6">
           <button
-            onClick={() => setShowHistory(false)}
+            onClick={() => {
+              setShowHistory(false);
+              if (editingKode) handleReset();
+            }}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
               !showHistory ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
             }`}
@@ -462,22 +536,41 @@ export default function GenerateQrPage() {
                 {history.map((rec) => (
                   <div
                     key={rec.kode}
-                    className="flex items-center justify-between gap-4 border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors"
                   >
                     <div className="min-w-0">
                       <div className="font-semibold text-slate-900 truncate">{rec.nama_klien}</div>
                       <div className="text-sm text-slate-500 truncate">{rec.no_laporan}</div>
-                      <div className="text-xs text-slate-400 mt-1">
+                      <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-2">
                         <span className="font-mono text-blue-900">{rec.kode}</span>
-                        {rec.created_at ? ` · ${formatTanggal(rec.created_at.slice(0, 10))}` : ''}
+                        {rec.created_at && (
+                          <span>· {formatTanggal(rec.created_at.slice(0, 10))}</span>
+                        )}
+                        {rec.file_path ? (
+                          <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-800 font-medium">
+                            PDF terlampir
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-medium">
+                            Belum ada PDF
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <button
-                      onClick={() => showQrFromHistory(rec)}
-                      className="shrink-0 bg-blue-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
-                    >
-                      Lihat QR
-                    </button>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleEdit(rec)}
+                        className="bg-white border border-blue-900 text-blue-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => showQrFromHistory(rec)}
+                        className="bg-blue-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
+                      >
+                        Lihat QR
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -489,6 +582,25 @@ export default function GenerateQrPage() {
             onSubmit={handleSubmit}
             className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50 p-6 md:p-8 space-y-5"
           >
+            {editingKode && (
+              <div className="bg-amber-50 border border-amber-300 text-amber-900 px-4 py-3 rounded-lg text-sm">
+                <div className="font-semibold mb-1">Mode Edit</div>
+                <div className="text-xs leading-relaxed">
+                  Memperbarui data untuk kode{' '}
+                  <span className="font-mono font-bold">{editingKode}</span>.
+                  Kode dan link QR <strong>tidak berubah</strong>, jadi QR yang
+                  sudah ditempel di dokumen tetap berlaku.
+                </div>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="mt-2 text-xs font-medium underline hover:no-underline"
+                >
+                  Batalkan edit
+                </button>
+              </div>
+            )}
+
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
                 ❌ {error}
@@ -618,20 +730,27 @@ export default function GenerateQrPage() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Dokumen Laporan (PDF) <span className="text-red-500">*</span>
+                Dokumen Laporan (PDF){' '}
+                <span className="font-normal text-slate-400">— opsional</span>
               </label>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="application/pdf,.pdf"
                 onChange={handleFileChange}
-                required
                 disabled={submitting}
                 className="w-full text-sm text-slate-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-900 file:text-white hover:file:bg-blue-800 file:cursor-pointer border border-slate-300 rounded-lg p-2"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Hanya file PDF, maksimal 2 MB.
+                Hanya file PDF, maksimal 2 MB. Boleh dikosongkan dulu — PDF bisa
+                dilampirkan belakangan lewat Riwayat QR → Edit, tanpa mengubah
+                kode/link QR.
               </p>
+              {existingFilePath && !file && (
+                <p className="text-xs text-blue-700 mt-1 font-medium">
+                  PDF sudah terlampir. Pilih file baru hanya jika ingin mengganti.
+                </p>
+              )}
               {file && (
                 <p className="text-xs text-green-700 mt-1 font-medium">
                   ✓ {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
@@ -647,8 +766,10 @@ export default function GenerateQrPage() {
               {submitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Membuat QR...
+                  {editingKode ? 'Menyimpan...' : 'Membuat QR...'}
                 </>
+              ) : editingKode ? (
+                'Simpan Perubahan'
               ) : (
                 'Buat QR Code'
               )}

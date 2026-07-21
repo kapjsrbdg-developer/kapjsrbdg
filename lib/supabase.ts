@@ -379,6 +379,50 @@ export const getReportValidationByKode = async (kode: string) => {
   }
 };
 
+// Perbarui record validasi. `kode` dipakai sebagai penanda dan TIDAK diubah,
+// sehingga QR yang sudah ditempel di dokumen tetap valid.
+// filePath null/undefined = biarkan file yang sudah ada.
+export const updateReportValidation = async (payload: {
+  kode: string;
+  namaKap: string;
+  namaKlien: string;
+  periodeAwal: string;
+  periodeAkhir: string;
+  noLaporan: string;
+  tanggalTerbit: string;
+  apPenanggungJawab: string;
+  filePath?: string | null;
+}) => {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return { error: 'Supabase configuration is missing.' };
+    }
+
+    const { error } = await supabase.rpc('update_report_validation', {
+      p_kode: payload.kode,
+      p_nama_kap: payload.namaKap,
+      p_nama_klien: payload.namaKlien,
+      p_periode_awal: payload.periodeAwal,
+      p_periode_akhir: payload.periodeAkhir,
+      p_no_laporan: payload.noLaporan,
+      p_tanggal_terbit: payload.tanggalTerbit,
+      p_ap_penanggung_jawab: payload.apPenanggungJawab,
+      p_file_path: payload.filePath ?? null,
+    });
+
+    if (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error updating report validation:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+};
+
 // Ambil semua record validasi (untuk dashboard admin "Riwayat QR").
 export const getAllReportValidations = async () => {
   try {
