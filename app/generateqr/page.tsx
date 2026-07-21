@@ -9,6 +9,8 @@ import {
   clearUserSession,
   generateValidationCode,
   insertReportValidation,
+  getAllReportValidations,
+  type ReportValidation,
 } from '../../lib/supabase';
 import AdminLogin from '../../components/AdminLogin';
 
@@ -75,6 +77,12 @@ export default function GenerateQrPage() {
   const [error, setError] = useState('');
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Riwayat QR (dashboard admin)
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<ReportValidation[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
 
   useEffect(() => {
     setIsAuthenticated(!!checkAuth());
@@ -199,9 +207,48 @@ export default function GenerateQrPage() {
     setError('');
   };
 
+  const loadHistory = async () => {
+    setShowHistory(true);
+    setResult(null);
+    setHistoryLoading(true);
+    setHistoryError('');
+    const { data, error } = await getAllReportValidations();
+    if (error) setHistoryError(error);
+    setHistory(data || []);
+    setHistoryLoading(false);
+  };
+
+  // Tampilkan (bentuk ulang) QR dari sebuah record riwayat.
+  const showQrFromHistory = async (rec: ReportValidation) => {
+    const url = `${buildBaseUrl()}/validasi/${rec.kode}`;
+    const qrDataUrl = await QRCode.toDataURL(url, {
+      width: 600,
+      margin: 2,
+      errorCorrectionLevel: 'H',
+      color: { dark: '#1e3a8a', light: '#ffffff' },
+    });
+    setResult({
+      kode: rec.kode,
+      url,
+      qrDataUrl,
+      report: {
+        namaKap: rec.nama_kap,
+        namaKlien: rec.nama_klien,
+        periodeAwal: rec.periode_awal,
+        periodeAkhir: rec.periode_akhir,
+        noLaporan: rec.no_laporan,
+        tanggalTerbit: rec.tanggal_terbit,
+        apPenanggungJawab: rec.ap_penanggung_jawab,
+      },
+    });
+    setShowHistory(false);
+  };
+
   const handleLogout = () => {
     clearUserSession();
     setIsAuthenticated(false);
+    setShowHistory(false);
+    setHistory([]);
     handleReset();
   };
 
@@ -261,7 +308,68 @@ export default function GenerateQrPage() {
           </p>
         </div>
 
-        {!result ? (
+        {/* Nav: Buat QR / Riwayat */}
+        <div className="flex justify-center gap-2 mb-6">
+          <button
+            onClick={() => setShowHistory(false)}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+              !showHistory ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
+            }`}
+          >
+            Buat QR
+          </button>
+          <button
+            onClick={loadHistory}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+              showHistory ? 'bg-blue-900 text-white' : 'bg-white/80 text-slate-700 hover:bg-white'
+            }`}
+          >
+            Riwayat QR
+          </button>
+        </div>
+
+        {showHistory ? (
+          /* ===== RIWAYAT QR ===== */
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50 p-6 md:p-8">
+            <h2 className="text-xl font-bold text-blue-900 mb-4">Riwayat QR</h2>
+            {historyLoading ? (
+              <div className="text-center py-8 text-slate-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900 mx-auto mb-3"></div>
+                Memuat...
+              </div>
+            ) : historyError ? (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
+                ❌ {historyError}
+              </div>
+            ) : history.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">Belum ada QR yang dibuat.</div>
+            ) : (
+              <div className="space-y-3">
+                {history.map((rec) => (
+                  <div
+                    key={rec.kode}
+                    className="flex items-center justify-between gap-4 border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-semibold text-slate-900 truncate">{rec.nama_klien}</div>
+                      <div className="text-sm text-slate-500 truncate">{rec.no_laporan}</div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        <span className="font-mono text-blue-900">{rec.kode}</span>
+                        {rec.created_at ? ` · ${formatTanggal(rec.created_at.slice(0, 10))}` : ''}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => showQrFromHistory(rec)}
+                      className="shrink-0 bg-blue-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
+                    >
+                      Lihat QR
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : !result ? (
           /* ===== FORM ===== */
           <form
             onSubmit={handleSubmit}

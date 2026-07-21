@@ -341,3 +341,26 @@ export const getReportValidationByKode = async (kode: string) => {
     };
   }
 };
+
+// Ambil semua record validasi (untuk dashboard admin "Riwayat QR").
+export const getAllReportValidations = async () => {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return { data: [], error: 'Supabase configuration is missing.' };
+    }
+
+    const { data, error } = await supabase.rpc('list_report_validations');
+
+    if (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    return { data: (data as ReportValidation[]) || [], error: null };
+  } catch (error) {
+    console.error('Error fetching report validations:', error);
+    return {
+      data: [],
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+};

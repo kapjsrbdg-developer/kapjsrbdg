@@ -46,6 +46,20 @@ $$;
 -- Izinkan aplikasi (anon key) dan user login memanggil fungsi ini.
 GRANT EXECUTE ON FUNCTION get_report_validation(TEXT) TO anon, authenticated;
 
--- 4. (Opsional) Verifikasi
+-- 4. Fungsi daftar semua QR (untuk dashboard admin "Riwayat QR" di /generateqr).
+--    Catatan: sama seperti tabel client_forms, daftar ini bisa diambil lewat
+--    anon key (proteksi di level tampilan/login aplikasi, bukan server).
+CREATE OR REPLACE FUNCTION list_report_validations()
+RETURNS SETOF report_validations
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT * FROM report_validations ORDER BY created_at DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION list_report_validations() TO anon, authenticated;
+
+-- 5. (Opsional) Verifikasi
 -- SELECT column_name, data_type FROM information_schema.columns
 -- WHERE table_name = 'report_validations' ORDER BY ordinal_position;
