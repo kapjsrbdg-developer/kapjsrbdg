@@ -497,24 +497,18 @@
   },
   {
     "slug": "JSR-016",
-    "name": "Alia Rahmaniar",
+    "name": "Teddy Anriansyah",
     "title": "Konsultan",
-    "foto": "/img/karyawan/alia.png",
+    "foto": "/img/karyawan/teddy.png",
     "education": [
       {
         "degree": "S.E. (Sarjana Ekonomi)",
-        "institution": "Universitas Katolik Parahyangan",
+        "institution": "Universitas Padjadjaran",
         "year": ""
       }
     ],
-    "certification": [
-      {
-        "name": "ACPA (Associate Certified Public Accountant)",
-        "issuer": "",
-        "year": ""
-      }
-    ],
-    "instagram": "@budi_santoso"
+    "certification": [],
+    "instagram": ""
   },
   {
     "slug": "JSR-017",
