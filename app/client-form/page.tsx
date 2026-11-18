@@ -30,9 +30,16 @@ interface PersonalData {
 
 interface CompanyData {
   namaEntitas: string;
-  bidangUsaha: string;
+  jenisPerusahaan: string; // Pusat | Anak | Cabang
+  npwp: string; // opsional
+  bidangUsaha: string; // kode industri
+  bidangUsahaLainnya: string; // teks bebas jika industri mengandung "Lainnya"
+  perbankanJenis: string; // Konvensional | Syariah, jika Perbankan
   alamatPerusahaan: string;
   tahunBuku: string;
+  sudahSAK: string; // Sudah | Belum
+  sakJenis: string; // jenis SAK jika Sudah
+  sakLainnya: string; // teks bebas jika SAK = Lainnya
   pernahDiaudit: boolean;
   namaKAPSebelumnya?: string;
   opiniKAPSebelumnya?: string;
@@ -58,9 +65,16 @@ const initialPersonalData: PersonalData = {
 
 const initialCompanyData: CompanyData = {
   namaEntitas: '',
+  jenisPerusahaan: '',
+  npwp: '',
   bidangUsaha: '',
+  bidangUsahaLainnya: '',
+  perbankanJenis: '',
   alamatPerusahaan: '',
   tahunBuku: '',
+  sudahSAK: '',
+  sakJenis: '',
+  sakLainnya: '',
   pernahDiaudit: false,
   namaKAPSebelumnya: '',
   opiniKAPSebelumnya: '',
@@ -72,6 +86,36 @@ const jasaOptions = [
   'Jasa Audit Laporan Keuangan',
   'Jasa Agreed Upon Procedures (AUP)',
   'Jasa Accounting Advisory',
+  'Jasa Audit SKAI',
+  'Lainnya'
+];
+
+const jenisPerusahaanOptions = ['Pusat', 'Anak', 'Cabang'];
+
+// Kode Industri Pengguna Jasa (dari Excel KAP JSR)
+const bidangUsahaOptions = [
+  '01 Pertanian, perkebunan, kehutanan, peternakan, kelautan dan perikanan',
+  '02 Pertambangan dan Energi',
+  '03 Properti dan Konstruksi',
+  '04 Industri Pengolahan/Manufaktur',
+  '05 Perdagangan dan Jasa',
+  '06 Informasi, Komunikasi dan Transportasi',
+  '07 Sektor Keuangan - Perbankan',
+  '08 Sektor Keuangan - Asuransi dan Dana Pensiun',
+  '09 Sektor Keuangan - Lainnya',
+  '10 Industri Lainnya',
+  '11 Pemerintahan, Badan Internasional dan Organisasi Non Profit',
+  '12 Non Industri/Perorangan'
+];
+
+const sakOptions = [
+  'SAK',
+  'SAK ETAP',
+  'SAK EMKM',
+  'SAK Syariah',
+  'SAP',
+  'SAKI',
+  'SAK EP',
   'Lainnya'
 ];
 
@@ -271,9 +315,40 @@ export default function ClientFormPage() {
       // Validate each company data
       for (let i = 0; i < companies.length; i++) {
         const company = companies[i];
-        if (!company.namaEntitas || !company.bidangUsaha || !company.alamatPerusahaan || 
-            !company.tahunBuku || !company.jumlahPendapatan || !company.jumlahAset) {
-          setSubmitMessage(`❌ Mohon lengkapi semua data wajib untuk Perusahaan ${i + 1}.`);
+        const label = `Perusahaan ${i + 1}`;
+
+        if (!company.jenisPerusahaan || !company.namaEntitas || !company.bidangUsaha ||
+            !company.alamatPerusahaan || !company.tahunBuku ||
+            !company.jumlahPendapatan || !company.jumlahAset) {
+          setSubmitMessage(`❌ Mohon lengkapi semua data wajib untuk ${label}.`);
+          return;
+        }
+
+        // Bidang usaha "Lainnya" wajib diisi teks
+        if (company.bidangUsaha.includes('Lainnya') && !company.bidangUsahaLainnya.trim()) {
+          setSubmitMessage(`❌ Mohon sebutkan bidang usaha untuk ${label}.`);
+          return;
+        }
+
+        // Perbankan wajib pilih Konvensional/Syariah
+        if (company.bidangUsaha.includes('Perbankan') && !company.perbankanJenis) {
+          setSubmitMessage(`❌ Mohon pilih jenis perbankan (Konvensional/Syariah) untuk ${label}.`);
+          return;
+        }
+
+        // Status SAK wajib dipilih
+        if (!company.sudahSAK) {
+          setSubmitMessage(`❌ Mohon pilih status penggunaan SAK untuk ${label}.`);
+          return;
+        }
+
+        if (company.sudahSAK === 'Sudah' && !company.sakJenis) {
+          setSubmitMessage(`❌ Mohon pilih jenis SAK untuk ${label}.`);
+          return;
+        }
+
+        if (company.sakJenis === 'Lainnya' && !company.sakLainnya.trim()) {
+          setSubmitMessage(`❌ Mohon sebutkan jenis SAK untuk ${label}.`);
           return;
         }
       }
@@ -538,6 +613,22 @@ export default function ClientFormPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Jenis Perusahaan *
+                        </label>
+                        <select
+                          value={company.jenisPerusahaan}
+                          onChange={(e) => handleCompanyDataChange(index, 'jenisPerusahaan', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                        >
+                          <option value="">Pilih jenis perusahaan</option>
+                          {jenisPerusahaanOptions.map((jenis) => (
+                            <option key={jenis} value={jenis}>{jenis}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
                           Nama Entitas *
                         </label>
                         <input
@@ -551,15 +642,73 @@ export default function ClientFormPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Bidang Usaha / Gambaran Umum *
+                          Nomor NPWP <span className="font-normal text-slate-400">(opsional)</span>
                         </label>
                         <input
                           type="text"
+                          value={company.npwp}
+                          onChange={(e) => handleCompanyDataChange(index, 'npwp', e.target.value)}
+                          className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                          placeholder="Nomor NPWP perusahaan"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Bidang Usaha / Gambaran Umum *
+                        </label>
+                        <select
                           value={company.bidangUsaha}
                           onChange={(e) => handleCompanyDataChange(index, 'bidangUsaha', e.target.value)}
-                          className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
-                          placeholder="Bidang usaha perusahaan"
-                        />
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                        >
+                          <option value="">Pilih bidang usaha</option>
+                          {bidangUsahaOptions.map((bidang) => (
+                            <option key={bidang} value={bidang}>{bidang}</option>
+                          ))}
+                        </select>
+
+                        {/* Input teks jika industri mengandung "Lainnya" (kode 09 & 10) */}
+                        {company.bidangUsaha.includes('Lainnya') && (
+                          <input
+                            type="text"
+                            value={company.bidangUsahaLainnya}
+                            onChange={(e) => handleCompanyDataChange(index, 'bidangUsahaLainnya', e.target.value)}
+                            className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                            placeholder="Sebutkan bidang usaha"
+                          />
+                        )}
+
+                        {/* Pilihan Konvensional/Syariah jika Perbankan (kode 07) */}
+                        {company.bidangUsaha.includes('Perbankan') && (
+                          <div className="mt-3">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Jenis Perbankan *
+                            </label>
+                            <div className="flex space-x-4">
+                              <label className="flex items-center text-slate-900 font-medium">
+                                <input
+                                  type="radio"
+                                  name={`perbankanJenis-${index}`}
+                                  checked={company.perbankanJenis === 'Konvensional'}
+                                  onChange={() => handleCompanyDataChange(index, 'perbankanJenis', 'Konvensional')}
+                                  className="mr-2 h-4 w-4 text-blue-900 focus:ring-blue-900"
+                                />
+                                Konvensional
+                              </label>
+                              <label className="flex items-center text-slate-900 font-medium">
+                                <input
+                                  type="radio"
+                                  name={`perbankanJenis-${index}`}
+                                  checked={company.perbankanJenis === 'Syariah'}
+                                  onChange={() => handleCompanyDataChange(index, 'perbankanJenis', 'Syariah')}
+                                  className="mr-2 h-4 w-4 text-blue-900 focus:ring-blue-900"
+                                />
+                                Syariah
+                              </label>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="md:col-span-2">
@@ -586,6 +735,62 @@ export default function ClientFormPage() {
                           className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
                           placeholder="2024"
                         />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Sudah menggunakan SAK? *
+                        </label>
+                        <div className="flex space-x-4">
+                          <label className="flex items-center text-slate-900 font-medium">
+                            <input
+                              type="radio"
+                              name={`sudahSAK-${index}`}
+                              checked={company.sudahSAK === 'Sudah'}
+                              onChange={() => handleCompanyDataChange(index, 'sudahSAK', 'Sudah')}
+                              className="mr-2 h-4 w-4 text-blue-900 focus:ring-blue-900"
+                            />
+                            Sudah
+                          </label>
+                          <label className="flex items-center text-slate-900 font-medium">
+                            <input
+                              type="radio"
+                              name={`sudahSAK-${index}`}
+                              checked={company.sudahSAK === 'Belum'}
+                              onChange={() => handleCompanyDataChange(index, 'sudahSAK', 'Belum')}
+                              className="mr-2 h-4 w-4 text-blue-900 focus:ring-blue-900"
+                            />
+                            Belum
+                          </label>
+                        </div>
+
+                        {company.sudahSAK === 'Sudah' && (
+                          <div className="mt-3">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Jenis SAK *
+                            </label>
+                            <select
+                              value={company.sakJenis}
+                              onChange={(e) => handleCompanyDataChange(index, 'sakJenis', e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                            >
+                              <option value="">Pilih jenis SAK</option>
+                              {sakOptions.map((sak) => (
+                                <option key={sak} value={sak}>{sak}</option>
+                              ))}
+                            </select>
+
+                            {company.sakJenis === 'Lainnya' && (
+                              <input
+                                type="text"
+                                value={company.sakLainnya}
+                                onChange={(e) => handleCompanyDataChange(index, 'sakLainnya', e.target.value)}
+                                className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                                placeholder="Sebutkan standar akuntansi yang digunakan"
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div>

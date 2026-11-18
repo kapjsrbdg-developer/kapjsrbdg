@@ -75,9 +75,16 @@ export default function AdminPage() {
       // Define interface for company data
       interface CompanyData {
         namaEntitas: string;
+        jenisPerusahaan?: string;
+        npwp?: string;
         bidangUsaha: string;
+        bidangUsahaLainnya?: string;
+        perbankanJenis?: string;
         alamatPerusahaan: string;
         tahunBuku: string;
+        sudahSAK?: string;
+        sakJenis?: string;
+        sakLainnya?: string;
         pernahDiaudit: boolean;
         namaKAPSebelumnya?: string;
         opiniKAPSebelumnya?: string;
@@ -108,10 +115,26 @@ export default function AdminPage() {
         // Add company details
         companiesArray.forEach((company: CompanyData, companyIndex: number) => {
           const prefix = companiesArray.length > 1 ? ` (Perusahaan ${companyIndex + 1})` : '';
+          baseData[`Jenis Perusahaan${prefix}`] = company.jenisPerusahaan || '-';
           baseData[`Nama Entitas${prefix}`] = company.namaEntitas || '-';
-          baseData[`Bidang Usaha${prefix}`] = company.bidangUsaha || '-';
+          baseData[`NPWP${prefix}`] = company.npwp || '-';
+          baseData[`Bidang Usaha${prefix}`] = company.bidangUsaha
+            ? (company.bidangUsaha.includes('Lainnya') && company.bidangUsahaLainnya
+                ? `${company.bidangUsaha} (${company.bidangUsahaLainnya})`
+                : company.bidangUsaha)
+            : '-';
+          if (company.bidangUsaha?.includes('Perbankan')) {
+            baseData[`Jenis Perbankan${prefix}`] = company.perbankanJenis || '-';
+          }
           baseData[`Alamat${prefix}`] = company.alamatPerusahaan || '-';
           baseData[`Tahun Buku${prefix}`] = company.tahunBuku || '-';
+          baseData[`Menggunakan SAK${prefix}`] = company.sudahSAK || '-';
+          if (company.sudahSAK === 'Sudah') {
+            baseData[`Jenis SAK${prefix}`] =
+              company.sakJenis === 'Lainnya' && company.sakLainnya
+                ? `Lainnya (${company.sakLainnya})`
+                : company.sakJenis || '-';
+          }
           baseData[`Pernah Diaudit${prefix}`] = company.pernahDiaudit ? 'Ya' : 'Tidak';
           if (company.pernahDiaudit) {
             baseData[`KAP Sebelumnya${prefix}`] = company.namaKAPSebelumnya || '-';
@@ -435,9 +458,16 @@ export default function AdminPage() {
                         <div className="space-y-4">
                           {companiesArray.map((company: {
                             namaEntitas: string;
+                            jenisPerusahaan?: string;
+                            npwp?: string;
                             bidangUsaha: string;
+                            bidangUsahaLainnya?: string;
+                            perbankanJenis?: string;
                             alamatPerusahaan: string;
                             tahunBuku: string;
+                            sudahSAK?: string;
+                            sakJenis?: string;
+                            sakLainnya?: string;
                             pernahDiaudit: boolean;
                             namaKAPSebelumnya?: string;
                             opiniKAPSebelumnya?: string;
@@ -448,13 +478,32 @@ export default function AdminPage() {
                               <h5 className="font-medium text-green-600 mb-3">Perusahaan {index + 1}</h5>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div>
+                                  <label className="text-slate-600">Jenis Perusahaan</label>
+                                  <div className="font-medium text-slate-900">{company.jenisPerusahaan || '-'}</div>
+                                </div>
+                                <div>
                                   <label className="text-slate-600">Nama Entitas</label>
                                   <div className="font-medium text-slate-900">{company.namaEntitas}</div>
                                 </div>
                                 <div>
-                                  <label className="text-slate-600">Bidang Usaha</label>
-                                  <div className="font-medium text-slate-900">{company.bidangUsaha}</div>
+                                  <label className="text-slate-600">NPWP</label>
+                                  <div className="font-medium text-slate-900">{company.npwp || '-'}</div>
                                 </div>
+                                <div>
+                                  <label className="text-slate-600">Bidang Usaha</label>
+                                  <div className="font-medium text-slate-900">
+                                    {company.bidangUsaha}
+                                    {company.bidangUsaha?.includes('Lainnya') && company.bidangUsahaLainnya
+                                      ? ` (${company.bidangUsahaLainnya})`
+                                      : ''}
+                                  </div>
+                                </div>
+                                {company.bidangUsaha?.includes('Perbankan') && (
+                                  <div>
+                                    <label className="text-slate-600">Jenis Perbankan</label>
+                                    <div className="font-medium text-slate-900">{company.perbankanJenis || '-'}</div>
+                                  </div>
+                                )}
                                 <div className="md:col-span-2">
                                   <label className="text-slate-600">Alamat</label>
                                   <div className="font-medium text-slate-900">{company.alamatPerusahaan}</div>
@@ -462,6 +511,15 @@ export default function AdminPage() {
                                 <div>
                                   <label className="text-slate-600">Tahun Buku</label>
                                   <div className="font-medium text-slate-900">{company.tahunBuku}</div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Menggunakan SAK</label>
+                                  <div className="font-medium text-slate-900">
+                                    {company.sudahSAK || '-'}
+                                    {company.sudahSAK === 'Sudah' && company.sakJenis
+                                      ? `: ${company.sakJenis === 'Lainnya' && company.sakLainnya ? company.sakLainnya : company.sakJenis}`
+                                      : ''}
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="text-slate-600">Pernah Diaudit</label>
