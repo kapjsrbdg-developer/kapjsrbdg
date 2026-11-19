@@ -76,11 +76,17 @@ export default function AdminPage() {
       interface CompanyData {
         namaEntitas: string;
         jenisPerusahaan?: string;
+        jenisPerusahaanLainnya?: string;
+        kedudukan?: string;
+        namaKantorPusat?: string;
         npwp?: string;
         bidangUsaha: string;
         bidangUsahaLainnya?: string;
         perbankanJenis?: string;
         alamatPerusahaan: string;
+        toolsDigunakan?: string;
+        toolsJenis?: string;
+        toolsLainnya?: string;
         tahunBuku: string;
         sudahSAK?: string;
         sakJenis?: string;
@@ -105,8 +111,8 @@ export default function AdminPage() {
           'Nomor HP': form.nomor_hp,
           'Jumlah Entitas': form.jumlah_entitas,
           'Jasa yang Dibutuhkan': jasaArray.join(', '),
-          'Tujuan Audit': form.tujuan_audit === 'Lainnya' 
-            ? `Lainnya (${form.tujuan_audit_lainnya || '-'})` 
+          'Tujuan Penggunaan Jasa': form.tujuan_audit === 'Lainnya'
+            ? `Lainnya (${form.tujuan_audit_lainnya || '-'})`
             : form.tujuan_audit || '-',
           'Darimana Mengetahui KAP JSR': form.deskripsi || '-',
           'Tanggal Submit': form.created_at ? formatDate(form.created_at) : '-'
@@ -115,7 +121,14 @@ export default function AdminPage() {
         // Add company details
         companiesArray.forEach((company: CompanyData, companyIndex: number) => {
           const prefix = companiesArray.length > 1 ? ` (Perusahaan ${companyIndex + 1})` : '';
-          baseData[`Jenis Perusahaan${prefix}`] = company.jenisPerusahaan || '-';
+          baseData[`Jenis Perusahaan${prefix}`] =
+            company.jenisPerusahaan === 'Lainnya' && company.jenisPerusahaanLainnya
+              ? `Lainnya (${company.jenisPerusahaanLainnya})`
+              : company.jenisPerusahaan || '-';
+          baseData[`Kedudukan${prefix}`] =
+            company.kedudukan === 'Cabang' && company.namaKantorPusat
+              ? `Cabang (Pusat: ${company.namaKantorPusat})`
+              : company.kedudukan || '-';
           baseData[`Nama Entitas${prefix}`] = company.namaEntitas || '-';
           baseData[`NPWP${prefix}`] = company.npwp || '-';
           baseData[`Bidang Usaha${prefix}`] = company.bidangUsaha
@@ -127,6 +140,12 @@ export default function AdminPage() {
             baseData[`Jenis Perbankan${prefix}`] = company.perbankanJenis || '-';
           }
           baseData[`Alamat${prefix}`] = company.alamatPerusahaan || '-';
+          baseData[`Tools/Software${prefix}`] =
+            company.toolsDigunakan === 'Iya'
+              ? (company.toolsJenis === 'Lainnya' && company.toolsLainnya
+                  ? `Lainnya (${company.toolsLainnya})`
+                  : company.toolsJenis || 'Iya')
+              : (company.toolsDigunakan || '-');
           baseData[`Tahun Buku${prefix}`] = company.tahunBuku || '-';
           baseData[`Menggunakan SAK${prefix}`] = company.sudahSAK || '-';
           if (company.sudahSAK === 'Sudah') {
@@ -436,7 +455,7 @@ export default function AdminPage() {
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm text-slate-600">Tujuan Audit</label>
+                            <label className="text-sm text-slate-600">Tujuan Penggunaan Jasa</label>
                             <div className="font-medium text-slate-900">
                               {selectedForm.tujuan_audit === 'Lainnya' 
                                 ? `${selectedForm.tujuan_audit} (${selectedForm.tujuan_audit_lainnya || '-'})` 
@@ -459,11 +478,17 @@ export default function AdminPage() {
                           {companiesArray.map((company: {
                             namaEntitas: string;
                             jenisPerusahaan?: string;
+                            jenisPerusahaanLainnya?: string;
+                            kedudukan?: string;
+                            namaKantorPusat?: string;
                             npwp?: string;
                             bidangUsaha: string;
                             bidangUsahaLainnya?: string;
                             perbankanJenis?: string;
                             alamatPerusahaan: string;
+                            toolsDigunakan?: string;
+                            toolsJenis?: string;
+                            toolsLainnya?: string;
                             tahunBuku: string;
                             sudahSAK?: string;
                             sakJenis?: string;
@@ -479,7 +504,20 @@ export default function AdminPage() {
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div>
                                   <label className="text-slate-600">Jenis Perusahaan</label>
-                                  <div className="font-medium text-slate-900">{company.jenisPerusahaan || '-'}</div>
+                                  <div className="font-medium text-slate-900">
+                                    {company.jenisPerusahaan === 'Lainnya' && company.jenisPerusahaanLainnya
+                                      ? `Lainnya (${company.jenisPerusahaanLainnya})`
+                                      : company.jenisPerusahaan || '-'}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Kedudukan</label>
+                                  <div className="font-medium text-slate-900">
+                                    {company.kedudukan || '-'}
+                                    {company.kedudukan === 'Cabang' && company.namaKantorPusat
+                                      ? ` (Pusat: ${company.namaKantorPusat})`
+                                      : ''}
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="text-slate-600">Nama Entitas</label>
@@ -507,6 +545,16 @@ export default function AdminPage() {
                                 <div className="md:col-span-2">
                                   <label className="text-slate-600">Alamat</label>
                                   <div className="font-medium text-slate-900">{company.alamatPerusahaan}</div>
+                                </div>
+                                <div>
+                                  <label className="text-slate-600">Tools/Software</label>
+                                  <div className="font-medium text-slate-900">
+                                    {company.toolsDigunakan === 'Iya'
+                                      ? (company.toolsJenis === 'Lainnya' && company.toolsLainnya
+                                          ? `Lainnya (${company.toolsLainnya})`
+                                          : company.toolsJenis || 'Iya')
+                                      : (company.toolsDigunakan || '-')}
+                                  </div>
                                 </div>
                                 <div>
                                   <label className="text-slate-600">Tahun Buku</label>

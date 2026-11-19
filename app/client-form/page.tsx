@@ -5,21 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { insertClientForm } from '../../lib/supabase';
 
-// Helper function to format number with commas
-const formatNumberWithCommas = (value: string): string => {
-  // Remove all non-digit characters except decimal point
-  const numericValue = value.replace(/[^\d]/g, '');
-  
-  // Add commas every three digits
-  if (numericValue.length > 0) {
-    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  }
-  return '';
-};
-
-// Helper function to remove commas from formatted number
-const removeCommas = (value: string): string => {
-  return value.replace(/,/g, '');
+// Format angka jadi Rupiah dengan pemisah ribuan titik, mis. "Rp 1.000.000.000"
+const formatRupiah = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return '';
+  return 'Rp ' + digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
 interface PersonalData {
@@ -30,30 +20,39 @@ interface PersonalData {
 
 interface CompanyData {
   namaEntitas: string;
-  jenisPerusahaan: string; // Pusat | Anak | Cabang
+  jenisPerusahaan: string; // PT, CV, Koperasi, dst
+  jenisPerusahaanLainnya: string; // teks jika jenis = Lainnya
+  kedudukan: string; // Pusat | Cabang
+  namaKantorPusat: string; // jika kedudukan = Cabang
   npwp: string; // opsional
   bidangUsaha: string; // kode industri
   bidangUsahaLainnya: string; // teks bebas jika industri mengandung "Lainnya"
   perbankanJenis: string; // Konvensional | Syariah, jika Perbankan
   alamatPerusahaan: string;
+  toolsDigunakan: string; // Iya | Tidak
+  toolsJenis: string; // nama tools jika Iya
+  toolsLainnya: string; // teks jika tools = Lainnya
   tahunBuku: string;
-  sudahSAK: string; // Sudah | Belum
+  sudahSAK: string; // Sudah | Belum (hanya Jasa Asurans)
   sakJenis: string; // jenis SAK jika Sudah
   sakLainnya: string; // teks bebas jika SAK = Lainnya
-  pernahDiaudit: boolean;
+  pernahDiaudit: boolean; // hanya Jasa Asurans
   namaKAPSebelumnya?: string;
   opiniKAPSebelumnya?: string;
-  jumlahPendapatan: string;
-  jumlahAset: string;
+  jumlahPendapatan: string; // input manual berformat Rp
+  jumlahAset: string; // range
 }
 
 interface FormData {
   personalData: PersonalData;
   jumlahEntitas: number;
+  jasaKategori: string; // Asurans | Lainnya
   jasaYangDibutuhkan: string[];
+  jasaLainnyaText: string; // teks jika sub-jasa "Jasa Lainnya"
   tujuanAudit: string;
   tujuanAuditLainnya?: string;
-  deskripsi: string;
+  deskripsi: string; // sumber info (dropdown)
+  deskripsiDetail: string; // teks jika Teman/Lainnya
   companies: CompanyData[];
 }
 
@@ -66,11 +65,17 @@ const initialPersonalData: PersonalData = {
 const initialCompanyData: CompanyData = {
   namaEntitas: '',
   jenisPerusahaan: '',
+  jenisPerusahaanLainnya: '',
+  kedudukan: '',
+  namaKantorPusat: '',
   npwp: '',
   bidangUsaha: '',
   bidangUsahaLainnya: '',
   perbankanJenis: '',
   alamatPerusahaan: '',
+  toolsDigunakan: '',
+  toolsJenis: '',
+  toolsLainnya: '',
   tahunBuku: '',
   sudahSAK: '',
   sakJenis: '',
@@ -82,15 +87,67 @@ const initialCompanyData: CompanyData = {
   jumlahAset: ''
 };
 
-const jasaOptions = [
+// Kategori jasa
+const jasaAsuransOptions = [
   'Jasa Audit Laporan Keuangan',
+  'Jasa Reviu Laporan Keuangan'
+];
+
+const jasaLainnyaOptions = [
+  'Jasa Investigasi',
   'Jasa Agreed Upon Procedures (AUP)',
-  'Jasa Accounting Advisory',
+  'Jasa Kompilasi',
+  'Jasa Konsultasi',
   'Jasa Audit SKAI',
+  'Jasa Lainnya'
+];
+
+// Jenis badan usaha di Indonesia
+const jenisPerusahaanOptions = [
+  'PT (Perseroan Terbatas)',
+  'PT Tbk (Perseroan Terbuka)',
+  'CV (Commanditaire Vennootschap)',
+  'Firma',
+  'Koperasi',
+  'Yayasan',
+  'Perkumpulan',
+  'BUMN (Persero)',
+  'Perum',
+  'BUMD',
+  'UD (Usaha Dagang)',
+  'Persekutuan Perdata',
+  'Perorangan',
   'Lainnya'
 ];
 
-const jenisPerusahaanOptions = ['Pusat', 'Anak', 'Cabang'];
+const kedudukanOptions = ['Pusat', 'Cabang'];
+
+// Software/ERP yang umum dipakai perusahaan
+const toolsOptions = [
+  'SAP',
+  'Oracle NetSuite',
+  'Microsoft Dynamics 365',
+  'Odoo',
+  'Accurate',
+  'Zahir Accounting',
+  'MYOB',
+  'Jurnal by Mekari',
+  'QuickBooks',
+  'Xero',
+  'Lainnya'
+];
+
+// Sumber informasi klien mengenal KAP JSR
+const sumberInfoOptions = [
+  'Teman/Kolega',
+  'Pencarian Google / Internet',
+  'Media Sosial (Instagram/LinkedIn/dll)',
+  'Website KAP JSR',
+  'Rekomendasi Bank',
+  'Acara/Seminar',
+  'Klien Lama',
+  'Lainnya'
+];
 
 // Kode Industri Pengguna Jasa (dari Excel KAP JSR)
 const bidangUsahaOptions = [
@@ -136,10 +193,13 @@ export default function ClientFormPage() {
   const [formData, setFormData] = useState<FormData>({
     personalData: initialPersonalData,
     jumlahEntitas: 1,
+    jasaKategori: '',
     jasaYangDibutuhkan: [],
+    jasaLainnyaText: '',
     tujuanAudit: '',
     tujuanAuditLainnya: '',
     deskripsi: '',
+    deskripsiDetail: '',
     companies: [initialCompanyData]
   });
 
@@ -174,12 +234,24 @@ export default function ClientFormPage() {
     }));
   };
 
+  const handleJasaKategoriChange = (kategori: string) => {
+    // Ganti kategori -> reset sub-jasa yang sudah dipilih
+    setFormData(prev => ({
+      ...prev,
+      jasaKategori: kategori,
+      jasaYangDibutuhkan: [],
+      jasaLainnyaText: ''
+    }));
+  };
+
   const handleJasaChange = (jasa: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      jasaYangDibutuhkan: checked 
+      jasaYangDibutuhkan: checked
         ? [...prev.jasaYangDibutuhkan, jasa]
-        : prev.jasaYangDibutuhkan.filter(j => j !== jasa)
+        : prev.jasaYangDibutuhkan.filter(j => j !== jasa),
+      // kalau "Jasa Lainnya" di-uncheck, kosongkan teksnya
+      jasaLainnyaText: jasa === 'Jasa Lainnya' && !checked ? '' : prev.jasaLainnyaText
     }));
   };
 
@@ -291,9 +363,15 @@ export default function ClientFormPage() {
     try {
       // Validate required fields
       const { personalData, jasaYangDibutuhkan, companies } = formData;
-      
+      const isAsurans = formData.jasaKategori === 'Asurans';
+
       if (!personalData.namaLengkap || !personalData.nomorHP || !personalData.email) {
         setSubmitMessage('❌ Mohon lengkapi semua data diri yang wajib diisi.');
+        return;
+      }
+
+      if (!formData.jasaKategori) {
+        setSubmitMessage('❌ Mohon pilih kategori jasa (Asurans / Lainnya).');
         return;
       }
 
@@ -302,13 +380,29 @@ export default function ClientFormPage() {
         return;
       }
 
+      if (jasaYangDibutuhkan.includes('Jasa Lainnya') && !formData.jasaLainnyaText.trim()) {
+        setSubmitMessage('❌ Mohon sebutkan jasa lainnya yang dibutuhkan.');
+        return;
+      }
+
       if (!formData.tujuanAudit) {
-        setSubmitMessage('❌ Mohon pilih tujuan audit.');
+        setSubmitMessage('❌ Mohon pilih tujuan penggunaan jasa.');
         return;
       }
 
       if (formData.tujuanAudit === 'Lainnya' && !formData.tujuanAuditLainnya?.trim()) {
-        setSubmitMessage('❌ Mohon isi tujuan audit lainnya.');
+        setSubmitMessage('❌ Mohon isi tujuan penggunaan jasa lainnya.');
+        return;
+      }
+
+      if (formData.deskripsi &&
+          (formData.deskripsi === 'Teman/Kolega' || formData.deskripsi === 'Lainnya') &&
+          !formData.deskripsiDetail.trim()) {
+        setSubmitMessage(
+          formData.deskripsi === 'Teman/Kolega'
+            ? '❌ Mohon sebutkan nama teman/kolega yang merekomendasikan.'
+            : '❌ Mohon sebutkan dari mana Anda mengetahui KAP JSR.'
+        );
         return;
       }
 
@@ -317,10 +411,22 @@ export default function ClientFormPage() {
         const company = companies[i];
         const label = `Perusahaan ${i + 1}`;
 
-        if (!company.jenisPerusahaan || !company.namaEntitas || !company.bidangUsaha ||
-            !company.alamatPerusahaan || !company.tahunBuku ||
-            !company.jumlahPendapatan || !company.jumlahAset) {
+        if (!company.jenisPerusahaan || !company.kedudukan || !company.namaEntitas ||
+            !company.bidangUsaha || !company.alamatPerusahaan || !company.tahunBuku ||
+            !company.toolsDigunakan || !company.jumlahPendapatan || !company.jumlahAset) {
           setSubmitMessage(`❌ Mohon lengkapi semua data wajib untuk ${label}.`);
+          return;
+        }
+
+        // Jenis perusahaan "Lainnya" wajib diisi teks
+        if (company.jenisPerusahaan === 'Lainnya' && !company.jenisPerusahaanLainnya.trim()) {
+          setSubmitMessage(`❌ Mohon sebutkan jenis perusahaan untuk ${label}.`);
+          return;
+        }
+
+        // Kedudukan "Cabang" wajib isi nama kantor pusat
+        if (company.kedudukan === 'Cabang' && !company.namaKantorPusat.trim()) {
+          setSubmitMessage(`❌ Mohon sebutkan nama kantor pusat untuk ${label}.`);
           return;
         }
 
@@ -336,25 +442,54 @@ export default function ClientFormPage() {
           return;
         }
 
-        // Status SAK wajib dipilih
-        if (!company.sudahSAK) {
-          setSubmitMessage(`❌ Mohon pilih status penggunaan SAK untuk ${label}.`);
+        // Tools: jika Iya wajib pilih jenis, dan "Lainnya" wajib teks
+        if (company.toolsDigunakan === 'Iya' && !company.toolsJenis) {
+          setSubmitMessage(`❌ Mohon pilih tools yang digunakan untuk ${label}.`);
           return;
         }
 
-        if (company.sudahSAK === 'Sudah' && !company.sakJenis) {
-          setSubmitMessage(`❌ Mohon pilih jenis SAK untuk ${label}.`);
+        if (company.toolsDigunakan === 'Iya' && company.toolsJenis === 'Lainnya' && !company.toolsLainnya.trim()) {
+          setSubmitMessage(`❌ Mohon sebutkan tools yang digunakan untuk ${label}.`);
           return;
         }
 
-        if (company.sakJenis === 'Lainnya' && !company.sakLainnya.trim()) {
-          setSubmitMessage(`❌ Mohon sebutkan jenis SAK untuk ${label}.`);
-          return;
+        // Field SAK & riwayat audit hanya wajib untuk Jasa Asurans
+        if (isAsurans) {
+          if (!company.sudahSAK) {
+            setSubmitMessage(`❌ Mohon pilih status penggunaan SAK untuk ${label}.`);
+            return;
+          }
+
+          if (company.sudahSAK === 'Sudah' && !company.sakJenis) {
+            setSubmitMessage(`❌ Mohon pilih jenis SAK untuk ${label}.`);
+            return;
+          }
+
+          if (company.sakJenis === 'Lainnya' && !company.sakLainnya.trim()) {
+            setSubmitMessage(`❌ Mohon sebutkan jenis SAK untuk ${label}.`);
+            return;
+          }
         }
       }
 
+      // Susun data: ganti "Jasa Lainnya" dengan teksnya, dan gabung detail sumber info.
+      // Field perusahaan baru otomatis ikut tersimpan (seluruh objek companies di-JSON-kan).
+      const submitData = {
+        ...formData,
+        jasaYangDibutuhkan: formData.jasaYangDibutuhkan.map(j =>
+          j === 'Jasa Lainnya' && formData.jasaLainnyaText.trim()
+            ? `Jasa Lainnya: ${formData.jasaLainnyaText.trim()}`
+            : j
+        ),
+        deskripsi:
+          (formData.deskripsi === 'Teman/Kolega' || formData.deskripsi === 'Lainnya') &&
+          formData.deskripsiDetail.trim()
+            ? `${formData.deskripsi} (${formData.deskripsiDetail.trim()})`
+            : formData.deskripsi,
+      };
+
       // Submit to Supabase
-      const { error } = await insertClientForm(formData);
+      const { error } = await insertClientForm(submitData);
 
       if (error) {
         setSubmitMessage(`❌ Error: ${error}`);
@@ -367,10 +502,13 @@ export default function ClientFormPage() {
           setFormData({
             personalData: initialPersonalData,
             jumlahEntitas: 1,
+            jasaKategori: '',
             jasaYangDibutuhkan: [],
+            jasaLainnyaText: '',
             tujuanAudit: '',
             tujuanAuditLainnya: '',
             deskripsi: '',
+            deskripsiDetail: '',
             companies: [initialCompanyData]
           });
           setCurrentStep(1);
@@ -539,67 +677,124 @@ export default function ClientFormPage() {
                   </select>
                 </div>
 
-                {/* Jasa yang Dibutuhkan */}
+                {/* Kategori Jasa */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-4">
-                    Jasa yang dibutuhkan (bisa lebih dari 1) *
+                    Kategori Jasa *
                   </label>
-                  <div className="grid grid-cols-1 gap-3">
-                    {jasaOptions.map(jasa => (
-                      <label key={jasa} className="flex items-center p-3 rounded-xl border border-slate-200 hover:border-blue-900/30 transition-colors cursor-pointer">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {['Asurans', 'Lainnya'].map((kat) => (
+                      <label
+                        key={kat}
+                        className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${
+                          formData.jasaKategori === kat
+                            ? 'border-blue-900 bg-blue-50'
+                            : 'border-slate-200 hover:border-blue-900/30'
+                        }`}
+                      >
                         <input
-                          type="checkbox"
-                          checked={formData.jasaYangDibutuhkan.includes(jasa)}
-                          onChange={(e) => handleJasaChange(jasa, e.target.checked)}
-                          className="mr-3 h-4 w-4 text-blue-900 focus:ring-blue-900 border-slate-300 rounded"
+                          type="radio"
+                          name="jasaKategori"
+                          checked={formData.jasaKategori === kat}
+                          onChange={() => handleJasaKategoriChange(kat)}
+                          className="mr-3 h-4 w-4 text-blue-900 focus:ring-blue-900"
                         />
-                        <span className="text-slate-700">{jasa}</span>
+                        <span className="text-slate-700 font-medium">
+                          {kat === 'Asurans' ? 'Jasa Asurans' : 'Jasa Lainnya'}
+                        </span>
                       </label>
                     ))}
                   </div>
+
+                  {/* Sub-jasa sesuai kategori */}
+                  {formData.jasaKategori && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-slate-700 mb-3">
+                        Pilih jasa (bisa lebih dari 1) *
+                      </label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {(formData.jasaKategori === 'Asurans' ? jasaAsuransOptions : jasaLainnyaOptions).map((jasa) => (
+                          <label key={jasa} className="flex items-center p-3 rounded-xl border border-slate-200 hover:border-blue-900/30 transition-colors cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.jasaYangDibutuhkan.includes(jasa)}
+                              onChange={(e) => handleJasaChange(jasa, e.target.checked)}
+                              className="mr-3 h-4 w-4 text-blue-900 focus:ring-blue-900 border-slate-300 rounded"
+                            />
+                            <span className="text-slate-700">{jasa}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      {/* Teks jika "Jasa Lainnya" dipilih */}
+                      {formData.jasaYangDibutuhkan.includes('Jasa Lainnya') && (
+                        <input
+                          type="text"
+                          value={formData.jasaLainnyaText}
+                          onChange={(e) => setFormData(prev => ({ ...prev, jasaLainnyaText: e.target.value }))}
+                          className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                          placeholder="Sebutkan jasa lainnya yang dibutuhkan"
+                        />
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Tujuan Audit */}
+                {/* Tujuan Penggunaan Jasa */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Tujuan Audit *
+                    Tujuan Penggunaan Jasa *
                   </label>
                   <select
                     value={formData.tujuanAudit}
                     onChange={(e) => handleTujuanAuditChange(e.target.value)}
                     className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
                   >
-                    <option value="">Pilih tujuan audit</option>
+                    <option value="">Pilih tujuan penggunaan jasa</option>
                     {tujuanAuditOptions.map(tujuan => (
                       <option key={tujuan} value={tujuan}>{tujuan}</option>
                     ))}
                   </select>
-                  
+
                   {formData.tujuanAudit === 'Lainnya' && (
                     <input
                       type="text"
                       value={formData.tujuanAuditLainnya || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, tujuanAuditLainnya: e.target.value }))}
                       className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
-                      placeholder="Sebutkan tujuan audit lainnya"
+                      placeholder="Sebutkan tujuan penggunaan jasa lainnya"
                     />
                   )}
                 </div>
 
-                {/* Deskripsi - Darimana Anda mengetahui KAP JSR */}
+                {/* Sumber info - Darimana Anda mengetahui KAP JSR */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Darimana Anda mengetahui KAP JSR?
                   </label>
-                  <textarea
+                  <select
                     value={formData.deskripsi}
-                    onChange={(e) => setFormData(prev => ({ ...prev, deskripsi: e.target.value }))}
-                    className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 min-h-[80px]"
-                    placeholder="Contoh: Referensi dari teman, pencarian Google, media sosial, dll."
-                    rows={3}
-                  />
+                    onChange={(e) => setFormData(prev => ({ ...prev, deskripsi: e.target.value, deskripsiDetail: '' }))}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                  >
+                    <option value="">Pilih sumber informasi</option>
+                    {sumberInfoOptions.map((sumber) => (
+                      <option key={sumber} value={sumber}>{sumber}</option>
+                    ))}
+                  </select>
+
+                  {(formData.deskripsi === 'Teman/Kolega' || formData.deskripsi === 'Lainnya') && (
+                    <input
+                      type="text"
+                      value={formData.deskripsiDetail}
+                      onChange={(e) => setFormData(prev => ({ ...prev, deskripsiDetail: e.target.value }))}
+                      className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                      placeholder={formData.deskripsi === 'Teman/Kolega' ? 'Nama teman/kolega yang merekomendasikan' : 'Sebutkan sumbernya'}
+                    />
+                  )}
+
                   <p className="mt-1 text-xs text-slate-500">
-                    (Opsional) Bantu kami memahami lebih baik bagaimana Anda menemukan KAP JSR
+                    (Opsional) Bantu kami memahami bagaimana Anda menemukan KAP JSR
                   </p>
                 </div>
 
@@ -625,6 +820,40 @@ export default function ClientFormPage() {
                             <option key={jenis} value={jenis}>{jenis}</option>
                           ))}
                         </select>
+                        {company.jenisPerusahaan === 'Lainnya' && (
+                          <input
+                            type="text"
+                            value={company.jenisPerusahaanLainnya}
+                            onChange={(e) => handleCompanyDataChange(index, 'jenisPerusahaanLainnya', e.target.value)}
+                            className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                            placeholder="Sebutkan jenis perusahaan"
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Kedudukan Perusahaan *
+                        </label>
+                        <select
+                          value={company.kedudukan}
+                          onChange={(e) => handleCompanyDataChange(index, 'kedudukan', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                        >
+                          <option value="">Pilih kedudukan</option>
+                          {kedudukanOptions.map((ked) => (
+                            <option key={ked} value={ked}>{ked}</option>
+                          ))}
+                        </select>
+                        {company.kedudukan === 'Cabang' && (
+                          <input
+                            type="text"
+                            value={company.namaKantorPusat}
+                            onChange={(e) => handleCompanyDataChange(index, 'namaKantorPusat', e.target.value)}
+                            className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                            placeholder="Nama kantor pusat"
+                          />
+                        )}
                       </div>
 
                       <div>
@@ -724,9 +953,65 @@ export default function ClientFormPage() {
                         />
                       </div>
 
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Apakah perusahaan menggunakan Tools/Software? *
+                        </label>
+                        <div className="flex space-x-4">
+                          <label className="flex items-center text-slate-900 font-medium">
+                            <input
+                              type="radio"
+                              name={`toolsDigunakan-${index}`}
+                              checked={company.toolsDigunakan === 'Iya'}
+                              onChange={() => handleCompanyDataChange(index, 'toolsDigunakan', 'Iya')}
+                              className="mr-2 h-4 w-4 text-blue-900 focus:ring-blue-900"
+                            />
+                            Iya
+                          </label>
+                          <label className="flex items-center text-slate-900 font-medium">
+                            <input
+                              type="radio"
+                              name={`toolsDigunakan-${index}`}
+                              checked={company.toolsDigunakan === 'Tidak'}
+                              onChange={() => handleCompanyDataChange(index, 'toolsDigunakan', 'Tidak')}
+                              className="mr-2 h-4 w-4 text-blue-900 focus:ring-blue-900"
+                            />
+                            Tidak
+                          </label>
+                        </div>
+
+                        {company.toolsDigunakan === 'Iya' && (
+                          <div className="mt-3">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Tools/Software yang digunakan *
+                            </label>
+                            <select
+                              value={company.toolsJenis}
+                              onChange={(e) => handleCompanyDataChange(index, 'toolsJenis', e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
+                            >
+                              <option value="">Pilih tools/software</option>
+                              {toolsOptions.map((tool) => (
+                                <option key={tool} value={tool}>{tool}</option>
+                              ))}
+                            </select>
+
+                            {company.toolsJenis === 'Lainnya' && (
+                              <input
+                                type="text"
+                                value={company.toolsLainnya}
+                                onChange={(e) => handleCompanyDataChange(index, 'toolsLainnya', e.target.value)}
+                                className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                                placeholder="Sebutkan tools/software yang digunakan"
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Tahun Buku yang akan Diaudit *
+                          Tahun Buku *
                         </label>
                         <input
                           type="text"
@@ -737,6 +1022,8 @@ export default function ClientFormPage() {
                         />
                       </div>
 
+                      {formData.jasaKategori === 'Asurans' && (
+                      <>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           Sudah menggunakan SAK? *
@@ -854,25 +1141,22 @@ export default function ClientFormPage() {
                           </div>
                         </>
                       )}
+                      </>
+                      )}
 
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                          Jumlah Pendapatan/Penjualan Tahun Audit *
+                          Jumlah Pendapatan/Penjualan *
                         </label>
-                        <select
+                        <input
+                          type="text"
+                          inputMode="numeric"
                           value={company.jumlahPendapatan}
-                          onChange={(e) => handleCompanyDataChange(index, 'jumlahPendapatan', e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
-                        >
-                          <option value="">Pilih Range Pendapatan</option>
-                          <option value="< 1 milyar">&lt; 1 milyar</option>
-                          <option value="1 - 10 milyar">1 - 10 milyar</option>
-                          <option value="10 - 50 milyar">10 - 50 milyar</option>
-                          <option value="50 - 100 milyar">50 - 100 milyar</option>
-                          <option value="100 - 500 milyar">100 - 500 milyar</option>
-                          <option value="500 milyar - 1 trilyun">500 milyar - 1 trilyun</option>
-                          <option value="> 1 trilyun">&gt; 1 trilyun</option>
-                        </select>
+                          onChange={(e) => handleCompanyDataChange(index, 'jumlahPendapatan', formatRupiah(e.target.value))}
+                          className="w-full text-slate-900 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                          placeholder="Rp 0"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">Ketik angka saja, pemisah ribuan otomatis.</p>
                       </div>
 
                       <div>
