@@ -49,6 +49,7 @@ interface FormData {
   jasaKategori: string; // Asurans | Lainnya
   jasaYangDibutuhkan: string[];
   jasaLainnyaText: string; // teks jika sub-jasa "Jasa Lainnya"
+  investigasiDeskripsi: string; // deskripsi masalah jika sub-jasa "Jasa Investigasi"
   tujuanAudit: string;
   tujuanAuditLainnya?: string;
   deskripsi: string; // sumber info (dropdown)
@@ -196,6 +197,7 @@ export default function ClientFormPage() {
     jasaKategori: '',
     jasaYangDibutuhkan: [],
     jasaLainnyaText: '',
+    investigasiDeskripsi: '',
     tujuanAudit: '',
     tujuanAuditLainnya: '',
     deskripsi: '',
@@ -240,7 +242,8 @@ export default function ClientFormPage() {
       ...prev,
       jasaKategori: kategori,
       jasaYangDibutuhkan: [],
-      jasaLainnyaText: ''
+      jasaLainnyaText: '',
+      investigasiDeskripsi: ''
     }));
   };
 
@@ -250,8 +253,9 @@ export default function ClientFormPage() {
       jasaYangDibutuhkan: checked
         ? [...prev.jasaYangDibutuhkan, jasa]
         : prev.jasaYangDibutuhkan.filter(j => j !== jasa),
-      // kalau "Jasa Lainnya" di-uncheck, kosongkan teksnya
-      jasaLainnyaText: jasa === 'Jasa Lainnya' && !checked ? '' : prev.jasaLainnyaText
+      // kalau sub-jasa di-uncheck, kosongkan teks terkaitnya
+      jasaLainnyaText: jasa === 'Jasa Lainnya' && !checked ? '' : prev.jasaLainnyaText,
+      investigasiDeskripsi: jasa === 'Jasa Investigasi' && !checked ? '' : prev.investigasiDeskripsi
     }));
   };
 
@@ -385,6 +389,11 @@ export default function ClientFormPage() {
         return;
       }
 
+      if (jasaYangDibutuhkan.includes('Jasa Investigasi') && !formData.investigasiDeskripsi.trim()) {
+        setSubmitMessage('❌ Mohon isi deskripsi singkat masalah yang ingin diinvestigasi.');
+        return;
+      }
+
       if (!formData.tujuanAudit) {
         setSubmitMessage('❌ Mohon pilih tujuan penggunaan jasa.');
         return;
@@ -476,11 +485,15 @@ export default function ClientFormPage() {
       // Field perusahaan baru otomatis ikut tersimpan (seluruh objek companies di-JSON-kan).
       const submitData = {
         ...formData,
-        jasaYangDibutuhkan: formData.jasaYangDibutuhkan.map(j =>
-          j === 'Jasa Lainnya' && formData.jasaLainnyaText.trim()
-            ? `Jasa Lainnya: ${formData.jasaLainnyaText.trim()}`
-            : j
-        ),
+        jasaYangDibutuhkan: formData.jasaYangDibutuhkan.map(j => {
+          if (j === 'Jasa Lainnya' && formData.jasaLainnyaText.trim()) {
+            return `Jasa Lainnya: ${formData.jasaLainnyaText.trim()}`;
+          }
+          if (j === 'Jasa Investigasi' && formData.investigasiDeskripsi.trim()) {
+            return `Jasa Investigasi: ${formData.investigasiDeskripsi.trim()}`;
+          }
+          return j;
+        }),
         deskripsi:
           (formData.deskripsi === 'Teman/Kolega' || formData.deskripsi === 'Lainnya') &&
           formData.deskripsiDetail.trim()
@@ -505,6 +518,7 @@ export default function ClientFormPage() {
             jasaKategori: '',
             jasaYangDibutuhkan: [],
             jasaLainnyaText: '',
+            investigasiDeskripsi: '',
             tujuanAudit: '',
             tujuanAuditLainnya: '',
             deskripsi: '',
@@ -735,6 +749,22 @@ export default function ClientFormPage() {
                           className="mt-3 w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
                           placeholder="Sebutkan jasa lainnya yang dibutuhkan"
                         />
+                      )}
+
+                      {/* Deskripsi masalah jika "Jasa Investigasi" dipilih */}
+                      {formData.jasaYangDibutuhkan.includes('Jasa Investigasi') && (
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Deskripsi singkat masalah yang ingin diinvestigasi *
+                          </label>
+                          <textarea
+                            value={formData.investigasiDeskripsi}
+                            onChange={(e) => setFormData(prev => ({ ...prev, investigasiDeskripsi: e.target.value }))}
+                            className="w-full text-slate-500 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 min-h-[80px]"
+                            rows={3}
+                            placeholder="Jelaskan singkat masalah / dugaan yang ingin diinvestigasi"
+                          />
+                        </div>
                       )}
                     </div>
                   )}
@@ -1163,20 +1193,15 @@ export default function ClientFormPage() {
                         <label className="block text-sm font-medium text-slate-700 mb-2">
                           Jumlah Aset *
                         </label>
-                        <select
+                        <input
+                          type="text"
+                          inputMode="numeric"
                           value={company.jumlahAset}
-                          onChange={(e) => handleCompanyDataChange(index, 'jumlahAset', e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 bg-white text-slate-900 font-medium"
-                        >
-                          <option value="">Pilih Range Aset</option>
-                          <option value="< 1 milyar">&lt; 1 milyar</option>
-                          <option value="1 - 10 milyar">1 - 10 milyar</option>
-                          <option value="10 - 50 milyar">10 - 50 milyar</option>
-                          <option value="50 - 100 milyar">50 - 100 milyar</option>
-                          <option value="100 - 500 milyar">100 - 500 milyar</option>
-                          <option value="500 milyar - 1 trilyun">500 milyar - 1 trilyun</option>
-                          <option value="> 1 trilyun">&gt; 1 trilyun</option>
-                        </select>
+                          onChange={(e) => handleCompanyDataChange(index, 'jumlahAset', formatRupiah(e.target.value))}
+                          className="w-full text-slate-900 px-3 py-2 rounded-lg border border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20"
+                          placeholder="Rp 0"
+                        />
+                        <p className="mt-1 text-xs text-slate-500">Ketik angka saja, pemisah ribuan otomatis.</p>
                       </div>
                     </div>
                   </div>
